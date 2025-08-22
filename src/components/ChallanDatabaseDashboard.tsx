@@ -69,7 +69,7 @@ const ChallanDatabaseDashboard: React.FC = () => {
       setError(null);
       
       console.log('🔍 Fetching challans from API...');
-      const response = await fetch('http://localhost:3000/api/challan/database');
+      const response = await fetch('https://test.fitstok.com/api/challan/database');
       console.log('📡 Raw response:', response);
       console.log('📊 Response status:', response.status);
       console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
@@ -161,7 +161,7 @@ const ChallanDatabaseDashboard: React.FC = () => {
       console.log('🔍 Searching for challans:', searchForm);
 
       // Call backend API to trigger the pipeline
-      const response = await fetch(`http://localhost:3000/api/challan/search`, {
+      const response = await fetch(`https://test.fitstok.com/api/challan/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -214,7 +214,7 @@ const ChallanDatabaseDashboard: React.FC = () => {
       setIsRefetching(prev => ({ ...prev, [bikeChallan.id]: true }));
       
       // Call backend API to trigger the pipeline again
-      const response = await fetch(`http://localhost:3000/api/challan/search`, {
+      const response = await fetch(`https://test.fitstok.com/api/challan/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -399,7 +399,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
           console.log(`🔄 Processing vehicle ${i + 1}/${vehicles.length}: ${vehicle.regNo}`);
           
           // Use the individual search endpoint that goes through the complete pipeline
-          const response = await fetch('http://localhost:3000/api/challan/search', {
+          const response = await fetch('https://test.fitstok.com/api/challan/search', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

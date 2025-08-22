@@ -57,7 +57,7 @@ const ChallanSearchDashboard: React.FC = () => {
       setSearchResults(null);
 
       // Call your backend API to trigger the pipeline
-      const response = await fetch(`http://localhost:3000/api/challan/search`, {
+      const response = await fetch(`https://test.fitstok.com/api/challan/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

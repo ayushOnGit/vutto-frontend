@@ -34,7 +34,7 @@ Create a `.env` file in the root directory:
 
 ```bash
 # Backend API URL - Update this to match your backend server
-REACT_APP_API_URL=http://localhost:3000
+REACT_APP_API_URL=https://test.fitstok.com
 ```
 
 **Note**: Update the `REACT_APP_API_URL` to match your backend server URL and port.
@@ -51,7 +51,7 @@ npm install
 npm start
 ```
 
-The application will open at `http://localhost:3000` (or the next available port).
+The application will open at `https://test.fitstok.com` (or the next available port).
 
 ### 5. Build for Production
 
