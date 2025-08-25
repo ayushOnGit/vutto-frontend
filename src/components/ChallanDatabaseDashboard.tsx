@@ -131,6 +131,30 @@ const ChallanDatabaseDashboard: React.FC = () => {
     }).format(amount);
   };
 
+  // Helper function to format challan dates
+  const formatChallanDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      // Try to parse the date string
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        // If it's not a valid date, return as is
+        return dateString;
+      }
+      
+      // Format as DD/MM/YYYY
+      return date.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      // If parsing fails, return the original string
+      return dateString;
+    }
+  };
+
   // Search functionality
   const handleSearchInputChange = (field: keyof VehicleSearchForm, value: string) => {
     setSearchForm(prev => ({ ...prev, [field]: value }));
@@ -831,8 +855,8 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
         bValue = b.reg_no;
         break;
       case 'challan_count':
-        aValue = a.unique_challans_json?.length || 0;
-        bValue = b.unique_challans_json?.length || 0;
+        aValue = a.unique_challans_json?.filter((c: any) => isActiveChallan(c)).length || 0;
+        bValue = b.unique_challans_json?.filter((c: any) => isActiveChallan(c)).length || 0;
         break;
       case 'original_amount':
         aValue = a.settlement_summary_json?.totalOriginalAmount || 0;
@@ -1272,7 +1296,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                     }}
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Challans</span>
+                      <span>Active Challans</span>
                       {sortField === 'challan_count' && (
                         <span className="text-blue-600">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                       )}
@@ -1453,7 +1477,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {bikeChallan.unique_challans_json?.length || 0}
+                          {bikeChallan.unique_challans_json?.filter((c: any) => isActiveChallan(c)).length || 0}
                         </div>
                       </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -1671,50 +1695,66 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(() => {
-                          const vcourtNoticeChallans = bikeChallan.unique_challans_json?.filter((c: any) => c.source === 'vcourt_notice') || [];
-                          if (vcourtNoticeChallans.length === 0) {
+                          // Filter to only ACTIVE challans (non-disposed, non-paid)
+                          const activeVcourtNoticeChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                            c.source === 'vcourt_notice' && isActiveChallan(c)
+                          ) || [];
+                          
+                          if (activeVcourtNoticeChallans.length === 0) {
                             return <span className="text-gray-500">Record not found</span>;
                           }
-                          if (vcourtNoticeChallans.some((c: any) => c.error || c.status === 'error')) {
+                          if (activeVcourtNoticeChallans.some((c: any) => c.error || c.status === 'error')) {
                             return <span className="text-red-600">Error fetching</span>;
                           }
-                          return <span className="text-green-600">✓ {vcourtNoticeChallans.length} challan(s)</span>;
+                          return <span className="text-green-600">✓ {activeVcourtNoticeChallans.length} challan(s)</span>;
                         })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(() => {
-                          const vcourtTrafficChallans = bikeChallan.unique_challans_json?.filter((c: any) => c.source === 'vcourt_traffic') || [];
-                          if (vcourtTrafficChallans.length === 0) {
+                          // Filter to only ACTIVE challans (non-disposed, non-paid)
+                          const activeVcourtTrafficChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                            c.source === 'vcourt_traffic' && isActiveChallan(c)
+                          ) || [];
+                          
+                          if (activeVcourtTrafficChallans.length === 0) {
                             return <span className="text-gray-500">Record not found</span>;
                           }
-                          if (vcourtTrafficChallans.some((c: any) => c.error || c.status === 'error')) {
+                          if (activeVcourtTrafficChallans.some((c: any) => c.error || c.status === 'error')) {
                             return <span className="text-red-600">Error fetching</span>;
                           }
-                          return <span className="text-green-600">✓ {vcourtTrafficChallans.length} challan(s)</span>;
+                          return <span className="text-green-600">✓ {activeVcourtTrafficChallans.length} challan(s)</span>;
                         })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(() => {
-                          const delhiPoliceChallans = bikeChallan.unique_challans_json?.filter((c: any) => c.source === 'traffic_notice') || [];
-                          if (delhiPoliceChallans.length === 0) {
+                          // Filter to only ACTIVE challans (non-disposed, non-paid)
+                          const activeDelhiPoliceChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                            c.source === 'traffic_notice' && isActiveChallan(c)
+                          ) || [];
+                          
+                          if (activeDelhiPoliceChallans.length === 0) {
                             return <span className="text-gray-500">Record not found</span>;
                           }
-                          if (delhiPoliceChallans.some((c: any) => c.error || c.status === 'error')) {
+                          if (activeDelhiPoliceChallans.some((c: any) => c.error || c.status === 'error')) {
                             return <span className="text-red-600">Error fetching</span>;
                           }
-                          return <span className="text-green-600">✓ {delhiPoliceChallans.length} challan(s)</span>;
+                          return <span className="text-green-600">✓ {activeDelhiPoliceChallans.length} challan(s)</span>;
                         })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(() => {
-                          const ackoChallans = bikeChallan.unique_challans_json?.filter((c: any) => c.source === 'acko') || [];
-                          if (ackoChallans.length === 0) {
+                          // Filter to only ACTIVE challans (non-disposed, non-paid)
+                          const activeAckoChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                            c.source === 'acko' && isActiveChallan(c)
+                          ) || [];
+                          
+                          if (activeAckoChallans.length === 0) {
                             return <span className="text-gray-500">Record not found</span>;
                           }
-                          if (ackoChallans.some((c: any) => c.error || c.status === 'error')) {
+                          if (activeAckoChallans.some((c: any) => c.error || c.status === 'error')) {
                             return <span className="text-red-600">Error fetching</span>;
                           }
-                          return <span className="text-green-600">✓ {ackoChallans.length} challan(s)</span>;
+                          return <span className="text-green-600">✓ {activeAckoChallans.length} challan(s)</span>;
                         })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -1786,6 +1826,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                   <p>Total records: {bikeChallans.length}</p>
                   <p>Records with settlement data: {bikeChallans.filter(c => c.settlement_summary_json).length}</p>
                   <p>Records with unique challans: {bikeChallans.filter(c => c.unique_challans_json?.length > 0).length}</p>
+                  <p>Records with active challans: {bikeChallans.filter(c => c.unique_challans_json?.some((challan: any) => isActiveChallan(challan))).length}</p>
                   <p>Sample settlement data: {JSON.stringify(bikeChallans[0]?.settlement_summary_json || 'No data', null, 2)}</p>
                 </div>
               </div>
@@ -1828,9 +1869,9 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
               {/* Summary */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-blue-600">Total Challans</p>
+                  <p className="text-sm font-medium text-blue-600">Active Challans</p>
                   <p className="text-2xl font-bold text-blue-900">
-                    {selectedBikeChallan.unique_challans_json?.length || 0}
+                    {selectedBikeChallan.unique_challans_json?.filter((c: any) => isActiveChallan(c)).length || 0}
                   </p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
@@ -1902,24 +1943,16 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                 {/* Source Summary Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   {['vcourt_notice', 'vcourt_traffic', 'traffic_notice', 'acko'].map((source) => {
-                    const challanCount = selectedBikeChallan.unique_challans_json?.filter(c => c.source === source).length || 0;
-                    const totalAmount = selectedBikeChallan.unique_challans_json
-                      ?.filter(c => c.source === source)
-                      ?.reduce((sum: number, c: any) => {
-                        let amount: string | number = 0;
-                        if (c.source === 'vcourt_notice' || c.source === 'vcourt_traffic') {
-                          if (c.detailedInfo?.caseDetails) {
-                            amount = c.detailedInfo.caseDetails['Proposed Fine'] || 0;
-                          }
-                        } else {
-                          amount = c.amount || c.fineAmount || c.penaltyAmount || c.totalAmount || 0;
-                        }
-                        if (typeof amount === 'string') {
-                          const numericAmount = parseFloat(amount.replace(/[^\d.]/g, ''));
-                          amount = isNaN(numericAmount) ? 0 : numericAmount;
-                        }
-                        return sum + (amount || 0);
-                      }, 0) || 0;
+                    // Filter to only ACTIVE challans (non-disposed, non-paid) for this source
+                    const activeChallans = selectedBikeChallan.unique_challans_json?.filter(c => 
+                      c.source === source && isActiveChallan(c)
+                    ) || [];
+                    
+
+                    const totalAmount = activeChallans.reduce((sum: number, c: any) => {
+                      // Use the same getChallanAmount function for consistency
+                      return sum + getChallanAmount(c);
+                    }, 0);
                     
                     return (
                       <div key={source} className={`bg-white p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
@@ -1931,7 +1964,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                           <div className={`text-2xl font-bold mb-1 ${
                             activeSource === source ? 'text-blue-700' : 'text-gray-900'
                           }`}>
-                            {challanCount}
+                            {activeChallans.length}
                           </div>
                           <div className="text-sm font-medium text-gray-700 mb-2">
                             {getSourceDisplayName(source)}
@@ -1950,7 +1983,10 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                   <h5 className="text-sm font-semibold text-gray-700 mb-3">Select Source to View Details</h5>
                   <nav className="flex flex-wrap gap-2">
                     {['vcourt_notice', 'vcourt_traffic', 'traffic_notice', 'acko'].map((source) => {
-                      const challanCount = selectedBikeChallan.unique_challans_json?.filter(c => c.source === source).length || 0;
+                      // Show count of only ACTIVE challans for this source
+                      const activeChallanCount = selectedBikeChallan.unique_challans_json?.filter(c => 
+                        c.source === source && isActiveChallan(c)
+                      ).length || 0; 
                       return (
                         <button
                           key={source}
@@ -1961,7 +1997,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                               : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                           }`}
                         >
-                          {getSourceDisplayName(source)} ({challanCount})
+                          {getSourceDisplayName(source)} ({activeChallanCount})
                         </button>
                       );
                     })}
@@ -1970,25 +2006,28 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
 
                 {/* Source Content */}
                 {['vcourt_notice', 'vcourt_traffic', 'traffic_notice', 'acko'].map((source) => {
-                  const sourceChallans = selectedBikeChallan.unique_challans_json?.filter(c => c.source === source) || [];
+                  // Filter to only ACTIVE challans (non-disposed, non-paid) for this source
+                  const sourceChallans = selectedBikeChallan.unique_challans_json?.filter(c => 
+                    c.source === source && isActiveChallan(c)
+                  ) || [];
                   
-                                     if (sourceChallans.length === 0) {
-                     return (
-                       <div key={source} className={`${activeSource === source ? 'block' : 'hidden'}`}>
-                         <div className="bg-gray-50 rounded-lg p-4 text-center py-8">
-                           <div className="text-gray-500">
-                             <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                             <h5 className="text-lg font-medium text-gray-900 mb-2">
-                               No {getSourceDisplayName(source)} Challans
-                             </h5>
-                             <p className="text-sm text-gray-500">
-                               This vehicle has no challans from {getSourceDisplayName(source)} source.
-                             </p>
-                           </div>
-                         </div>
-                       </div>
-                     );
-                   }
+                  if (sourceChallans.length === 0) {
+                    return (
+                      <div key={source} className={`${activeSource === source ? 'block' : 'hidden'}`}>
+                        <div className="bg-gray-50 rounded-lg p-4 text-center py-8">
+                          <div className="text-gray-500">
+                            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                            <h5 className="text-lg font-medium text-gray-900 mb-2">
+                              No Active {getSourceDisplayName(source)} Challans
+                            </h5>
+                            <p className="text-sm text-gray-500">
+                              This vehicle has no active challans from {getSourceDisplayName(source)} source.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
 
                   return (
                     <div key={source} className={`${activeSource === source ? 'block' : 'hidden'}`}>
@@ -2388,7 +2427,9 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                                             </div>
                                           </div>
                                           <div className="text-xs text-gray-500 mt-1">
-                                            Challan: {challan.challan_number || 'N/A'} | Status: {challan.status || 'N/A'}
+                                            Challan: {challan.challan_number || challan.noticeNo || challan.challanNo || 'N/A'} | 
+                                            Status: {challan.status || 'N/A'} | 
+                                            Date: {formatChallanDate(challan.offenceDateTime || challan.dateTime || challan.date)}
                                           </div>
                                         </div>
                                       );
