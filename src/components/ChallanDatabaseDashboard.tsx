@@ -260,7 +260,7 @@ const ChallanDatabaseDashboard: React.FC = () => {
     switch (source) {
       case 'vcourt_notice': return 'VCourt Notice';
       case 'vcourt_traffic': return 'VCourt Traffic';
-      case 'delhi_police': return 'Delhi Police';
+      case 'traffic_notice': return 'Delhi Police';
       case 'acko': return 'ACKO/CarInfo';
       default: return source.replace('_', ' ').toUpperCase();
     }
@@ -1559,7 +1559,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(() => {
-                          const delhiPoliceChallans = bikeChallan.unique_challans_json?.filter((c: any) => c.source === 'delhi_police') || [];
+                          const delhiPoliceChallans = bikeChallan.unique_challans_json?.filter((c: any) => c.source === 'traffic_notice') || [];
                           if (delhiPoliceChallans.length === 0) {
                             return <span className="text-gray-500">Record not found</span>;
                           }
@@ -1765,7 +1765,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                 
                 {/* Source Summary Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  {['vcourt_notice', 'vcourt_traffic', 'delhi_police', 'acko'].map((source) => {
+                  {['vcourt_notice', 'vcourt_traffic', 'traffic_notice', 'acko'].map((source) => {
                     const challanCount = selectedBikeChallan.unique_challans_json?.filter(c => c.source === source).length || 0;
                     const totalAmount = selectedBikeChallan.unique_challans_json
                       ?.filter(c => c.source === source)
@@ -1813,7 +1813,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                   <h5 className="text-sm font-semibold text-gray-700 mb-3">Select Source to View Details</h5>
                   <nav className="flex flex-wrap gap-2">
-                    {['vcourt_notice', 'vcourt_traffic', 'delhi_police', 'acko'].map((source) => {
+                    {['vcourt_notice', 'vcourt_traffic', 'traffic_notice', 'acko'].map((source) => {
                       const challanCount = selectedBikeChallan.unique_challans_json?.filter(c => c.source === source).length || 0;
                       return (
                         <button
@@ -1833,7 +1833,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                 </div>
 
                 {/* Source Content */}
-                {['vcourt_notice', 'vcourt_traffic', 'delhi_police', 'acko'].map((source) => {
+                {['vcourt_notice', 'vcourt_traffic', 'traffic_notice', 'acko'].map((source) => {
                   const sourceChallans = selectedBikeChallan.unique_challans_json?.filter(c => c.source === source) || [];
                   
                                      if (sourceChallans.length === 0) {
@@ -1865,7 +1865,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                source === 'vcourt_notice' ? 'bg-blue-100 text-blue-800' :
                                source === 'vcourt_traffic' ? 'bg-purple-100 text-purple-800' :
-                               source === 'delhi_police' ? 'bg-red-100 text-red-800' :
+                               source === 'traffic_notice' ? 'bg-red-100 text-red-800' :
                                'bg-green-100 text-green-800'
                              }`}>
                                {sourceChallans.length} challan{sourceChallans.length !== 1 ? 's' : ''}
@@ -1874,7 +1874,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                            <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border">
                              {source === 'vcourt_notice' && 'Court notices and legal challans from VCourt system'}
                              {source === 'vcourt_traffic' && 'Traffic challans from VCourt system'}
-                             {source === 'delhi_police' && 'Traffic challans from Delhi Police'}
+                             {source === 'traffic_notice' && 'Traffic challans from Delhi Police'}
                              {source === 'acko' && 'Challans from ACKO/CarInfo API and M Parivahan'}
                            </div>
                          </div>
@@ -2014,7 +2014,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                                                                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                      source === 'vcourt_notice' ? 'bg-blue-100 text-blue-800' :
                                      source === 'vcourt_traffic' ? 'bg-purple-100 text-purple-800' :
-                                     source === 'delhi_police' ? 'bg-red-100 text-red-800' :
+                                     source === 'traffic_notice' ? 'bg-red-100 text-red-800' :
                                      'bg-green-100 text-green-800'
                                    }`}>
                                      {getSourceDisplayName(source)}

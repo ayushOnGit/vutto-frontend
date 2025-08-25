@@ -23,7 +23,7 @@ const SettlementConfigTable: React.FC<SettlementConfigTableProps> = ({
         return 'MParivahan (ACKO/CarInfo)';
       case 'vcourt':
         return 'VCourt';
-      case 'delhi_police':
+      case 'traffic_notice':
         return 'Delhi Police';
       default:
         return sourceType;
