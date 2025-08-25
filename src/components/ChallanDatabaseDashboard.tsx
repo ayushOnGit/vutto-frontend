@@ -483,36 +483,172 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
     }
   };
 
-  // Function to get challan amount
+  // Function to get challan amount - NOW IDENTICAL TO BACKEND LOGIC
   const getChallanAmount = (challan: any): number => {
     try {
-      let amount: string | number = 0;
+      const { source, amount, detailedInfo } = challan;
       
-      if (challan.source === 'vcourt_notice' || challan.source === 'vcourt_traffic') {
-        // VCourt challans have complex structure
-        if (challan.detailedInfo?.caseDetails) {
-          const caseDetails = challan.detailedInfo.caseDetails;
-          amount = caseDetails['Proposed Fine'] || caseDetails['Fine Amount'] || caseDetails['Penalty Amount'] || 
-                   caseDetails['Total Amount'] || caseDetails['Amount'] || caseDetails['Challan Amount'] || 0;
+      // Method 1: Direct amount field (for fallback, mparivahan, acko)
+      if (amount && typeof amount === 'number') {
+        return amount;
+      }
+      
+      // Method 2: Acko/CarInfo specific extraction (check all possible amount fields)
+      if (source === 'acko') {
+        const ackoAmountFields = [
+          'fineAmount',
+          'penaltyAmount', 
+          'totalAmount',
+          'amount',
+          'fine',
+          'penalty',
+          'challanAmount'
+        ];
+        
+        for (const field of ackoAmountFields) {
+          if (challan[field] && typeof challan[field] === 'number') {
+            return challan[field];
+          }
         }
         
-        // Fallback to direct fields if detailedInfo is not available
-        if (!amount && challan.detailedInfo) {
-          amount = challan.detailedInfo.fineAmount || challan.detailedInfo.penaltyAmount || 
-                   challan.detailedInfo.totalAmount || challan.detailedInfo.amount || 0;
+        // Also check if amount is stored as string
+        for (const field of ackoAmountFields) {
+          if (challan[field] && typeof challan[field] === 'string') {
+            const extractedAmount = parseFloat(challan[field].replace(/[^\d.]/g, ''));
+            if (!isNaN(extractedAmount) && extractedAmount > 0) {
+              return extractedAmount;
+            }
+          }
         }
-      } else {
-        // Other sources (mparivahan, delhi_police, carinfo, acko)
-        amount = challan.amount || challan.fineAmount || challan.penaltyAmount || challan.totalAmount || 0;
       }
       
-      // Convert amount to number if it's a string
-      if (typeof amount === 'string') {
-        const numericAmount = parseFloat(amount.replace(/[^\d.]/g, ''));
-        amount = isNaN(numericAmount) ? 0 : numericAmount;
+      // Method 3: VCourt specific extraction
+      if (source === 'vcourt_notice' || source === 'vcourt_traffic') {
+        // Method 3a: Check detailedInfo.caseDetails for "Proposed Fine"
+        if (detailedInfo && detailedInfo.caseDetails) {
+          const proposedFine = detailedInfo.caseDetails["Proposed Fine"];
+          if (proposedFine) {
+            const extractedAmount = parseFloat(proposedFine);
+            if (!isNaN(extractedAmount)) {
+              return extractedAmount;
+            }
+          }
+          
+          // Method 3b: Check for other amount fields in caseDetails
+          const amountFields = ['Fine', 'Amount', 'Total Amount', 'Challan Amount', 'Penalty'];
+          for (const field of amountFields) {
+            const value = detailedInfo.caseDetails[field];
+            if (value) {
+              const extractedAmount = parseFloat(value.toString().replace(/[^\d.]/g, ''));
+              if (!isNaN(extractedAmount) && extractedAmount > 0 && extractedAmount < 100000) {
+                return extractedAmount;
+              }
+            }
+          }
+          
+          // Method 3c: Scan all caseDetails for amount-like values
+          for (const [key, value] of Object.entries(detailedInfo.caseDetails)) {
+            if (typeof value === 'string' && value.includes('₹')) {
+              const extractedAmount = parseFloat(value.replace(/[^\d.]/g, ''));
+              if (!isNaN(extractedAmount) && extractedAmount > 0 && extractedAmount < 100000) {
+                return extractedAmount;
+              }
+            }
+          }
+        }
+        
+        // Method 3d: Check direct challan fields for VCourt
+        const vcourtAmountFields = ['amount', 'fine', 'penalty', 'challanAmount', 'totalAmount', 'proposedFine'];
+        for (const field of vcourtAmountFields) {
+          if (challan[field]) {
+            const value = challan[field];
+            if (typeof value === 'number') {
+              return value;
+            } else if (typeof value === 'string') {
+              const extractedAmount = parseFloat(value.replace(/[^\d.]/g, ''));
+              if (!isNaN(extractedAmount) && extractedAmount > 0) {
+                return extractedAmount;
+              }
+            }
+          }
+        }
+        
+        // Method 3e: Check challan object structure for nested amount data
+        if (challan.challanData) {
+          const challanData = challan.challanData;
+          if (challanData.amount || challanData.fine || challanData.penalty) {
+            const amount = challanData.amount || challanData.fine || challanData.penalty;
+            const extractedAmount = parseFloat(amount.toString().replace(/[^\d.]/g, ''));
+            if (!isNaN(extractedAmount) && extractedAmount > 0) {
+              return extractedAmount;
+            }
+          }
+        }
       }
       
-      return amount as number;
+      // Method 4: Delhi Police Traffic specific extraction - IDENTICAL TO BACKEND
+      if (source === 'traffic_notice') {
+        // Method 4a: Check penaltyAmount field FIRST (primary field for Delhi Police)
+        if (challan.penaltyAmount) {
+          const value = challan.penaltyAmount;
+          if (typeof value === 'number') {
+            return value;
+          } else if (typeof value === 'string') {
+            const extractedAmount = parseFloat(value.replace(/[^\d.]/g, ''));
+            if (!isNaN(extractedAmount) && extractedAmount > 0) {
+              return extractedAmount;
+            }
+          }
+        }
+        
+        // Method 4b: Check other possible amount fields for Delhi Police
+        const delhiAmountFields = ['amount', 'fine', 'penalty', 'challanAmount', 'totalAmount', 'fineAmount'];
+        for (const field of delhiAmountFields) {
+          if (challan[field]) {
+            const value = challan[field];
+            if (typeof value === 'number') {
+              return value;
+            } else if (typeof value === 'string') {
+              const extractedAmount = parseFloat(value.replace(/[^\d.]/g, ''));
+              if (!isNaN(extractedAmount) && extractedAmount > 0) {
+                return extractedAmount;
+              }
+            }
+          }
+        }
+      }
+      
+      // Method 5: Check for amount in various possible fields (generic fallback)
+      const possibleAmountFields = [
+        'fine',
+        'penalty',
+        'challanAmount',
+        'totalAmount',
+        'proposedFine',
+        'caseAmount'
+      ];
+      
+      for (const field of possibleAmountFields) {
+        if (challan[field] && typeof challan[field] === 'number') {
+          return challan[field];
+        }
+      }
+      
+      // Method 6: Check detailedInfo for any amount-like fields
+      if (detailedInfo && detailedInfo.caseDetails) {
+        for (const [key, value] of Object.entries(detailedInfo.caseDetails)) {
+          if (typeof value === 'string' && value.includes('.') && !isNaN(parseFloat(value))) {
+            const extractedAmount = parseFloat(value);
+            if (extractedAmount > 0 && extractedAmount < 100000) { // Reasonable amount range
+              return extractedAmount;
+            }
+          }
+        }
+      }
+      
+      // No amount found
+      return 0;
+      
     } catch (error) {
       console.error('Error getting challan amount:', error);
       return 0;
@@ -2097,45 +2233,242 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                   
                   return (
                     <div className="space-y-4">
-                      {/* Source-wise Breakdown */}
+                      {/* Source-wise Breakdown - Segregated by Source */}
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <h4 className="font-semibold text-gray-900 mb-3">Source-wise Challan Breakdown</h4>
-                        <div className="space-y-3">
-                          {activeChallans.map((challan: any, index: number) => {
-                            const isDL = challan.challan_number?.startsWith('DL') || /^\d/.test(challan.challan_number || '');
-                            const originalAmount = getChallanAmount(challan);
-                            const settlementAmount = getChallanSettlementAmount(challan);
+                        
+                        {/* Segregate challans by source */}
+                        {(() => {
+                          const sourceGroups = {
+                            vcourt_notice: [],
+                            vcourt_traffic: [],
+                            traffic_notice: [],
+                            acko: []
+                          };
+                          
+                          // Group challans by source
+                          activeChallans.forEach(challan => {
                             const source = challan.source || 'unknown';
-                            
-                            return (
-                              <div key={index} className="bg-white p-3 rounded border">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="font-medium text-gray-700">
-                                    {getSourceDisplayName(source)} Challan
-                                  </span>
-                                  <span className={`text-xs px-2 py-1 rounded-full ${
-                                    isDL ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                                  }`}>
-                                    {isDL ? 'DL' : 'Non-DL'}
-                                  </span>
+                            if (sourceGroups[source]) {
+                              sourceGroups[source].push(challan);
+                            }
+                          });
+                          
+                          return (
+                            <div className="space-y-6">
+                              {/* VCourt Notice Challans */}
+                              {sourceGroups.vcourt_notice.length > 0 && (
+                                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                  <h5 className="font-semibold text-blue-900 mb-3 flex items-center">
+                                    <span className="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                                    VCourt Notice Challans ({sourceGroups.vcourt_notice.length})
+                                  </h5>
+                                  <div className="space-y-3">
+                                    {sourceGroups.vcourt_notice.map((challan: any, index: number) => {
+                                      const isDL = challan.challan_number?.startsWith('DL') || /^\d/.test(challan.challan_number || '');
+                                      const originalAmount = getChallanAmount(challan);
+                                      const settlementAmount = getChallanSettlementAmount(challan);
+                                      
+                                      return (
+                                        <div key={index} className="bg-white p-3 rounded border border-blue-100">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <span className="font-medium text-gray-700">VCourt Notice Challan</span>
+                                            <span className={`text-xs px-2 py-1 rounded-full ${
+                                              isDL ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
+                                            }`}>
+                                              {isDL ? 'DL' : 'Non-DL'}
+                                            </span>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                              <span className="text-gray-600">Original Amount:</span>
+                                              <span className="font-semibold text-gray-900 ml-2">₹{originalAmount.toLocaleString()}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-gray-600">Settlement Amount:</span>
+                                              <span className="font-semibold text-gray-900 ml-2">₹{settlementAmount.toLocaleString()}</span>
+                                            </div>
+                                          </div>
+                                          <div className="text-xs text-gray-500 mt-1">
+                                            Challan: {challan.challan_number || 'N/A'} | Status: {challan.status || 'N/A'}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <div className="mt-3 pt-3 border-t border-blue-200">
+                                    <div className="flex justify-between text-sm font-medium text-blue-900">
+                                      <span>VCourt Notice Total:</span>
+                                      <span>₹{sourceGroups.vcourt_notice.reduce((sum, challan) => sum + getChallanAmount(challan), 0).toLocaleString()}</span>
+                                    </div>
+                                  </div>
                                 </div>
+                              )}
+                              
+                              {/* VCourt Traffic Challans */}
+                              {sourceGroups.vcourt_traffic.length > 0 && (
+                                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                  <h5 className="font-semibold text-purple-900 mb-3 flex items-center">
+                                    <span className="w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                                    VCourt Traffic Challans ({sourceGroups.vcourt_traffic.length})
+                                  </h5>
+                                  <div className="space-y-3">
+                                    {sourceGroups.vcourt_traffic.map((challan: any, index: number) => {
+                                      const isDL = challan.challan_number?.startsWith('DL') || /^\d/.test(challan.challan_number || '');
+                                      const originalAmount = getChallanAmount(challan);
+                                      const settlementAmount = getChallanSettlementAmount(challan);
+                                      
+                                      return (
+                                        <div key={index} className="bg-white p-3 rounded border border-purple-100">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <span className="font-medium text-gray-700">VCourt Traffic Challan</span>
+                                            <span className={`text-xs px-2 py-1 rounded-full ${
+                                              isDL ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
+                                            }`}>
+                                              {isDL ? 'DL' : 'Non-DL'}
+                                            </span>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                              <span className="text-gray-600">Original Amount:</span>
+                                              <span className="font-semibold text-gray-900 ml-2">₹{originalAmount.toLocaleString()}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-gray-600">Settlement Amount:</span>
+                                              <span className="font-semibold text-gray-900 ml-2">₹{settlementAmount.toLocaleString()}</span>
+                                            </div>
+                                          </div>
+                                          <div className="text-xs text-gray-500 mt-1">
+                                            Challan: {challan.challan_number || 'N/A'} | Status: {challan.status || 'N/A'}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <div className="mt-3 pt-3 border-t border-purple-200">
+                                    <div className="flex justify-between text-sm font-medium text-purple-900">
+                                      <span>VCourt Traffic Total:</span>
+                                      <span>₹{sourceGroups.vcourt_traffic.reduce((sum, challan) => sum + getChallanAmount(challan), 0).toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Delhi Police Traffic Challans */}
+                              {sourceGroups.traffic_notice.length > 0 && (
+                                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                                  <h5 className="font-semibold text-red-900 mb-3 flex items-center">
+                                    <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                                    Delhi Police Traffic Challans ({sourceGroups.traffic_notice.length})
+                                  </h5>
+                                  <div className="space-y-3">
+                                    {sourceGroups.traffic_notice.map((challan: any, index: number) => {
+                                      const isDL = challan.challan_number?.startsWith('DL') || /^\d/.test(challan.challan_number || '');
+                                      const originalAmount = getChallanAmount(challan);
+                                      const settlementAmount = getChallanSettlementAmount(challan);
+                                      
+                                      return (
+                                        <div key={index} className="bg-white p-3 rounded border border-red-100">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <span className="font-medium text-gray-700">Delhi Police Traffic Challan</span>
+                                            <span className={`text-xs px-2 py-1 rounded-full ${
+                                              isDL ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
+                                            }`}>
+                                              {isDL ? 'DL' : 'Non-DL'}
+                                            </span>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                              <span className="text-gray-600">Original Amount:</span>
+                                              <span className="font-semibold text-gray-900 ml-2">₹{originalAmount.toLocaleString()}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-gray-600">Settlement Amount:</span>
+                                              <span className="font-semibold text-gray-900 ml-2">₹{settlementAmount.toLocaleString()}</span>
+                                            </div>
+                                          </div>
+                                          <div className="text-xs text-gray-500 mt-1">
+                                            Challan: {challan.challan_number || 'N/A'} | Status: {challan.status || 'N/A'}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <div className="mt-3 pt-3 border-t border-red-200">
+                                    <div className="flex justify-between text-sm font-medium text-red-900">
+                                      <span>Delhi Police Traffic Total:</span>
+                                      <span>₹{sourceGroups.traffic_notice.reduce((sum, challan) => sum + getChallanAmount(challan), 0).toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* ACKO/CarInfo Challans */}
+                              {sourceGroups.acko.length > 0 && (
+                                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                  <h5 className="font-semibold text-green-900 mb-3 flex items-center">
+                                    <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                                    ACKO/CarInfo Challans ({sourceGroups.acko.length})
+                                  </h5>
+                                  <div className="space-y-3">
+                                    {sourceGroups.acko.map((challan: any, index: number) => {
+                                      const isDL = challan.challan_number?.startsWith('DL') || /^\d/.test(challan.challan_number || '');
+                                      const originalAmount = getChallanAmount(challan);
+                                      const settlementAmount = getChallanSettlementAmount(challan);
+                                      
+                                      return (
+                                        <div key={index} className="bg-white p-3 rounded border border-green-100">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <span className="font-medium text-gray-700">ACKO/CarInfo Challan</span>
+                                            <span className={`text-xs px-2 py-1 rounded-full ${
+                                              isDL ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
+                                            }`}>
+                                              {isDL ? 'DL' : 'Non-DL'}
+                                            </span>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                              <span className="text-gray-600">Original Amount:</span>
+                                              <span className="font-semibold text-gray-900 ml-2">₹{originalAmount.toLocaleString()}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-gray-600">Settlement Amount:</span>
+                                              <span className="font-semibold text-gray-900 ml-2">₹{settlementAmount.toLocaleString()}</span>
+                                            </div>
+                                          </div>
+                                          <div className="text-xs text-gray-500 mt-1">
+                                            Challan: {challan.challan_number || 'N/A'} | Status: {challan.status || 'N/A'}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <div className="mt-3 pt-3 border-t border-green-200">
+                                    <div className="flex justify-between text-sm font-medium text-green-900">
+                                      <span>ACKO/CarInfo Total:</span>
+                                      <span>₹{sourceGroups.acko.reduce((sum, challan) => sum + getChallanAmount(challan), 0).toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Grand Total Summary */}
+                              <div className="bg-gray-100 p-4 rounded-lg border border-gray-300">
+                                <h5 className="font-semibold text-gray-900 mb-3">Grand Total Summary</h5>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
-                                  <div>
-                                    <span className="text-gray-600">Original Amount:</span>
-                                    <span className="font-semibold text-gray-900 ml-2">₹{originalAmount.toLocaleString()}</span>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-700">Total Original Amount:</span>
+                                    <span className="font-semibold text-gray-900">₹{activeChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0).toLocaleString()}</span>
                                   </div>
-                                  <div>
-                                    <span className="text-gray-600">Settlement Amount:</span>
-                                    <span className="font-semibold text-gray-900 ml-2">₹{settlementAmount.toLocaleString()}</span>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-700">Total Settlement Amount:</span>
+                                    <span className="font-semibold text-gray-900">₹{activeChallans.reduce((sum, challan) => sum + getChallanSettlementAmount(challan), 0).toLocaleString()}</span>
                                   </div>
-                                </div>
-                                <div className="text-xs text-gray-500 mt-1">
-                                  Challan: {challan.challan_number || 'N/A'} | Status: {challan.status || 'N/A'}
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Summary Totals */}
