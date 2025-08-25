@@ -2293,6 +2293,41 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                             }
                           });
                           
+                          // Debug: Log the structure of active challans
+                          console.log('🔍 Active Challans Structure:', activeChallans.map(challan => ({
+                            source: challan.source,
+                            noticeNo: challan.noticeNo,
+                            challanNo: challan.challanNo,
+                            challan_number: challan.challan_number,
+                            offenceDateTime: challan.offenceDateTime,
+                            date: challan.date,
+                            dateTime: challan.dateTime
+                          })));
+
+                          // Debug: Log source groups
+                          console.log('🔍 Source Groups:', {
+                            vcourt_notice: sourceGroups.vcourt_notice.length,
+                            vcourt_traffic: sourceGroups.vcourt_traffic.length,
+                            traffic_notice: sourceGroups.traffic_notice.length,
+                            acko: sourceGroups.acko.length
+                          });
+
+                          // Debug: Log Delhi Police challans specifically
+                          if (sourceGroups.traffic_notice.length > 0) {
+                            console.log('🔍 Delhi Police Challans Data:', sourceGroups.traffic_notice.map(challan => ({
+                              noticeNo: challan.noticeNo,
+                              challanNo: challan.challanNo,
+                              challan_number: challan.challan_number,
+                              offenceDateTime: challan.offenceDateTime,
+                              offenceDate: challan.offenceDate,
+                              date: challan.date,
+                              dateTime: challan.dateTime,
+                              challanDate: challan.challanDate,
+                              penaltyAmount: challan.penaltyAmount,
+                              amount: challan.amount
+                            })));
+                          }
+                          
                           return (
                             <div className="space-y-6">
                               {/* VCourt Notice Challans */}
@@ -2400,11 +2435,36 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                                     <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
                                     Delhi Police Traffic Challans ({sourceGroups.traffic_notice.length})
                                   </h5>
+                                  
+                                  {/* Debug Information for Delhi Police */}
+                                  <div className="mb-3 p-2 bg-red-100 rounded text-xs text-red-800">
+                                    <strong>Debug Info:</strong> First challan data structure:
+                                    <pre className="mt-1 text-xs overflow-x-auto">
+                                      {JSON.stringify(sourceGroups.traffic_notice[0], null, 2)}
+                                    </pre>
+                                  </div>
+                                  
                                   <div className="space-y-3">
                                     {sourceGroups.traffic_notice.map((challan: any, index: number) => {
                                       const isDL = challan.challan_number?.startsWith('DL') || /^\d/.test(challan.challan_number || '');
                                       const originalAmount = getChallanAmount(challan);
                                       const settlementAmount = getChallanSettlementAmount(challan);
+                                      
+                                      // Debug logging for each challan
+                                      console.log(`🔍 Delhi Police Challan ${index}:`, {
+                                        noticeNo: challan.noticeNo,
+                                        challan_number: challan.challan_number,
+                                        offenceDateTime: challan.offenceDateTime,
+                                        date: challan.date,
+                                        dateTime: challan.dateTime,
+                                        allDateFields: {
+                                          offenceDateTime: challan.offenceDateTime,
+                                          offenceDate: challan.offenceDate,
+                                          date: challan.date,
+                                          dateTime: challan.dateTime,
+                                          challanDate: challan.challanDate
+                                        }
+                                      });
                                       
                                       return (
                                         <div key={index} className="bg-white p-3 rounded border border-red-100">
@@ -2429,7 +2489,17 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                                           <div className="text-xs text-gray-500 mt-1">
                                             Challan: {challan.challan_number || challan.noticeNo || challan.challanNo || 'N/A'} | 
                                             Status: {challan.status || 'N/A'} | 
-                                            Date: {formatChallanDate(challan.offenceDateTime || challan.dateTime || challan.date)}
+                                            Date: {formatChallanDate(challan.offenceDateTime || challan.offenceDate || challan.date || challan.dateTime || challan.challanDate)}
+                                          </div>
+                                          
+                                          {/* Additional Debug Info for this challan */}
+                                          <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
+                                            <strong>Date Fields Found:</strong><br/>
+                                            offenceDateTime: {challan.offenceDateTime || 'N/A'}<br/>
+                                            offenceDate: {challan.offenceDate || 'N/A'}<br/>
+                                            date: {challan.date || 'N/A'}<br/>
+                                            dateTime: {challan.dateTime || 'N/A'}<br/>
+                                            challanDate: {challan.challanDate || 'N/A'}
                                           </div>
                                         </div>
                                       );
