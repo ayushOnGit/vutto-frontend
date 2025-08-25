@@ -2239,7 +2239,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                         
                         {/* Segregate challans by source */}
                         {(() => {
-                          const sourceGroups = {
+                          const sourceGroups: { [key: string]: any[] } = {
                             vcourt_notice: [],
                             vcourt_traffic: [],
                             traffic_notice: [],
