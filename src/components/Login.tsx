@@ -37,8 +37,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         // Call parent onLogin function
         onLogin(data.data.user);
         
-        // Navigate to dashboard
-        navigate('/dashboard');
+        // Navigate to settlement dashboard (matches App.tsx routes)
+        navigate('/settlement');
       } else {
         setError(data.message || 'Google login failed');
       }
@@ -78,8 +78,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         // Call parent onLogin function
         onLogin(data.data.user);
         
-        // Navigate to dashboard
-        navigate('/dashboard');
+        // Navigate to settlement dashboard (matches App.tsx routes)
+        navigate('/settlement');
       } else {
         setError(data.message || 'Login failed');
       }
