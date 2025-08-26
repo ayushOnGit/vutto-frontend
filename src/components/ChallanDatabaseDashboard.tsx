@@ -2276,6 +2276,36 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <h4 className="font-semibold text-gray-900 mb-3">Source-wise Challan Breakdown</h4>
                         
+                        {/* 🎯 DELHI POLICE DEBUG SECTION */}
+                        {(() => {
+                          const delhiPoliceChallans = activeChallans.filter(challan => challan.source === 'traffic_notice');
+                          if (delhiPoliceChallans.length > 0) {
+                            console.log('🔍 DELHI POLICE DEBUG - Found challans:', delhiPoliceChallans.length);
+                            console.log('🔍 DELHI POLICE COMPLETE JSON:', JSON.stringify(delhiPoliceChallans, null, 2));
+                            console.log('🔍 DELHI POLICE RAW DATA:', delhiPoliceChallans);
+                            
+                            return (
+                              <div className="mb-4 p-3 bg-yellow-100 rounded border border-yellow-300">
+                                <h5 className="font-semibold text-yellow-800 mb-2">🔍 Delhi Police Debug Info</h5>
+                                <div className="text-xs text-yellow-700">
+                                  <strong>Found {delhiPoliceChallans.length} Delhi Police challans</strong><br/>
+                                  <strong>First challan structure:</strong>
+                                  <pre className="mt-1 text-xs overflow-x-auto bg-yellow-50 p-2 rounded">
+                                    {JSON.stringify(delhiPoliceChallans[0], null, 2)}
+                                  </pre>
+                                  <strong>All date fields in first challan:</strong><br/>
+                                  offenceDateTime: {delhiPoliceChallans[0]?.offenceDateTime || 'N/A'}<br/>
+                                  offenceDate: {delhiPoliceChallans[0]?.offenceDate || 'N/A'}<br/>
+                                  date: {delhiPoliceChallans[0]?.date || 'N/A'}<br/>
+                                  dateTime: {delhiPoliceChallans[0]?.dateTime || 'N/A'}<br/>
+                                  challanDate: {delhiPoliceChallans[0]?.challanDate || 'N/A'}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                        
                         {/* Segregate challans by source */}
                         {(() => {
                           const sourceGroups: { [key: string]: any[] } = {
@@ -2326,6 +2356,10 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                               penaltyAmount: challan.penaltyAmount,
                               amount: challan.amount
                             })));
+                            
+                            // 🎯 ADDITIONAL DEBUG: Log complete Delhi Police JSON
+                            console.log('🔍 COMPLETE Delhi Police JSON Data:', JSON.stringify(sourceGroups.traffic_notice, null, 2));
+                            console.log('🔍 Delhi Police Raw Data:', sourceGroups.traffic_notice);
                           }
                           
                           return (
