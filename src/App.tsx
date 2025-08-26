@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Navigation from './components/Navigation';
 import SettlementConfigDashboard from './components/SettlementConfigDashboard';
@@ -56,11 +57,13 @@ function AppContent() {
 // Root App component with providers
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </Router>
+    <GoogleOAuthProvider clientId="1015139019509-na1airmo1cqvjt82mm8kjr5uc7goaf8f.apps.googleusercontent.com">
+      <Router>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 

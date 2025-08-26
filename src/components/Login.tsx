@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 
 interface LoginProps {
   onLogin: (userData: any) => void;
@@ -10,9 +11,50 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setIsGoogleLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/google-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken: credentialResponse.credential }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Store token in localStorage
+        localStorage.setItem('authToken', data.data.token);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+        
+        // Call parent onLogin function
+        onLogin(data.data.user);
+        
+        // Navigate to dashboard
+        navigate('/dashboard');
+      } else {
+        setError(data.message || 'Google login failed');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google login failed. Please try again.');
+    setIsGoogleLoading(false);
+  };
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
@@ -67,11 +109,48 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             Vutto Company Login
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
-            Sign in with your @vutto.in email address
+            Sign in with your @vutto.in Google account
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        {/* Google OAuth Login */}
+        <div className="space-y-4">
+          <div className="text-center">
+            <p className="text-sm text-gray-400 mb-3">Recommended: Sign in with Google</p>
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="filled_blue"
+                size="large"
+                text="signin_with"
+                shape="rectangular"
+                width="300"
+              />
+            </div>
+            {isGoogleLoading && (
+              <div className="mt-3 text-blue-400 text-sm">
+                <svg className="animate-spin h-4 w-4 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Verifying Google account...
+              </div>
+            )}
+          </div>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-700" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-900 text-gray-400">Or continue with email</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Email Login Form */}
+        <form className="mt-8 space-y-6" onSubmit={handleEmailSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">
@@ -136,16 +215,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               ) : null}
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? 'Signing in...' : 'Sign in with Email'}
             </button>
           </div>
         </form>
 
         <div className="text-center">
           <p className="text-xs text-gray-500">
-            This system is restricted to Vutto company employees only.
+            <strong>Google Sign-in (Recommended):</strong> Verifies your actual @vutto.in Gmail account
             <br />
-            Please use your @vutto.in email address to access the system.
+            <strong>Email Sign-in:</strong> Basic domain verification only
+            <br />
+            <br />
+            This system is restricted to Vutto company employees only.
           </p>
         </div>
       </div>
