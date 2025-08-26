@@ -1686,6 +1686,20 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                                   extractedDate: date,
                                   fullChallanObject: challan
                                 });
+                                
+                                // 🎯 DEBUG: Console log date extraction process
+                                console.log('🚨 DELHI POLICE DATE EXTRACTION:', {
+                                  challanId: challan.challanNumber || challan.challanNo || challan.noticeNo,
+                                  offenceDateTime: challan.offenceDateTime,
+                                  offenceDate: challan.offenceDate,
+                                  dateTime: challan.dateTime,
+                                  date: challan.date,
+                                  challanDate: challan.challanDate,
+                                  noticeDate: challan.noticeDate,
+                                  issueDate: challan.issueDate,
+                                  createdDate: challan.createdDate,
+                                  finalExtractedDate: date
+                                });
                               } else {
                                 // Other sources (mparivahan, carinfo, acko)
                                 date = challan.dateTime || challan.date || challan.challanDate || challan.noticeDate || challan.issueDate || challan.createdDate || 'Unknown';
@@ -2137,7 +2151,30 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                             } else {
                               // Other sources (mparivahan, delhi_police, carinfo, acko)
                               amount = challan.amount || challan.fineAmount || challan.penaltyAmount || challan.totalAmount || 0;
-                              date = challan.dateTime || challan.date || challan.challanDate || challan.noticeDate || challan.issueDate || challan.createdDate || 'Unknown';
+                              
+                              // 🎯 FIXED: Delhi Police specific date extraction
+                              if (challan.source === 'traffic_notice') {
+                                // Delhi Police specific date fields - offenceDateTime is primary
+                                date = challan.offenceDateTime || challan.offenceDate || challan.dateTime || challan.date || challan.challanDate || challan.noticeDate || challan.issueDate || challan.createdDate || 'Unknown';
+                                
+                                // 🎯 DEBUG: Console log date extraction process
+                                console.log('🚨 DELHI POLICE DATE EXTRACTION:', {
+                                  challanId: challan.challanNumber || challan.challanNo || challan.noticeNo,
+                                  offenceDateTime: challan.offenceDateTime,
+                                  offenceDate: challan.offenceDate,
+                                  dateTime: challan.dateTime,
+                                  date: challan.date,
+                                  challanDate: challan.challanDate,
+                                  noticeDate: challan.noticeDate,
+                                  issueDate: challan.issueDate,
+                                  createdDate: challan.createdDate,
+                                  finalExtractedDate: date
+                                });
+                              } else {
+                                // Other sources (mparivahan, carinfo, acko)
+                                date = challan.dateTime || challan.date || challan.challanDate || challan.noticeDate || challan.issueDate || challan.createdDate || 'Unknown';
+                              }
+                              
                               status = challan.status || challan.challanStatus || challan.caseStatus || 'Unknown';
                               description = challan.description || challan.violation || challan.offence || challan.reason || 'No description';
                             }
@@ -2145,6 +2182,18 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                             // Extract challan ID
                             challanId = challan.challanNumber || challan.challanNo || challan.noticeNo || challan.ticketNo || 
                                        challan.caseNumber || challan.efilno || challan.id || 'No ID';
+                            
+                            // 🎯 DEBUG: Console log final extracted values for Delhi Police
+                            if (challan.source === 'traffic_notice') {
+                              console.log('🚨 DELHI POLICE FINAL VALUES (Basic Info):', {
+                                challanId,
+                                amount,
+                                date,
+                                status,
+                                description,
+                                source: challan.source
+                              });
+                            }
                             
                             // Convert amount to number if it's a string
                             if (typeof amount === 'string') {
