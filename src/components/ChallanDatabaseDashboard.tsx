@@ -1665,7 +1665,15 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                               }
                             } else {
                               // Other sources (mparivahan, delhi_police, carinfo, acko)
-                              date = challan.dateTime || challan.date || challan.challanDate || challan.noticeDate || challan.issueDate || challan.createdDate || 'Unknown';
+                              
+                              // 🎯 FIXED: Added offenceDateTime for Delhi Police challans
+                              if (challan.source === 'traffic_notice') {
+                                // Delhi Police specific date fields
+                                date = challan.offenceDateTime || challan.offenceDate || challan.dateTime || challan.date || challan.challanDate || challan.noticeDate || challan.issueDate || challan.createdDate || 'Unknown';
+                              } else {
+                                // Other sources (mparivahan, carinfo, acko)
+                                date = challan.dateTime || challan.date || challan.challanDate || challan.noticeDate || challan.issueDate || challan.createdDate || 'Unknown';
+                              }
                             }
                             
                             return date;
