@@ -15,11 +15,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const navigate = useNavigate();
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
+    console.log('🔐 Google OAuth Success:', credentialResponse);
     setIsGoogleLoading(true);
     setError('');
 
     try {
-      const response = await fetch('/api/auth/google-login', {
+      console.log('📡 Making API call to /api/auth/google-login...');
+      const response = await fetch('https://test.fitstok.com/api/auth/google-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -27,22 +29,34 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         body: JSON.stringify({ idToken: credentialResponse.credential }),
       });
 
+      console.log('📡 API Response Status:', response.status);
       const data = await response.json();
+      console.log('📡 API Response Data:', data);
 
       if (data.success) {
+        console.log('✅ Login successful, storing data...');
         // Store token in localStorage
         localStorage.setItem('authToken', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         
+        console.log('💾 Data stored in localStorage');
+        console.log('Token:', localStorage.getItem('authToken'));
+        console.log('User:', localStorage.getItem('user'));
+        
         // Call parent onLogin function
+        console.log('🔄 Calling onLogin function...');
         onLogin(data.data.user);
         
+        console.log('🧭 Navigating to /settlement...');
         // Navigate to settlement dashboard (matches App.tsx routes)
         navigate('/settlement');
+        console.log('✅ Navigation completed');
       } else {
+        console.log('❌ Login failed:', data.message);
         setError(data.message || 'Google login failed');
       }
     } catch (err) {
+      console.error('❌ Network error:', err);
       setError('Network error. Please try again.');
     } finally {
       setIsGoogleLoading(false);
@@ -60,7 +74,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('https://test.fitstok.com/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

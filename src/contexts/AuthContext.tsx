@@ -79,8 +79,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = (userData: User) => {
+    console.log('🔐 AuthContext.login called with:', userData);
     setUser(userData);
     setIsAuthenticated(true);
+    console.log('✅ AuthContext state updated:', { user: userData, isAuthenticated: true });
   };
 
   const logout = () => {
