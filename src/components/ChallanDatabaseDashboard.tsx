@@ -1670,6 +1670,22 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                               if (challan.source === 'traffic_notice') {
                                 // Delhi Police specific date fields
                                 date = challan.offenceDateTime || challan.offenceDate || challan.dateTime || challan.date || challan.challanDate || challan.noticeDate || challan.issueDate || challan.createdDate || 'Unknown';
+                                
+                                // 🎯 DEBUG: Console log Delhi Police challan JSON
+                                console.log('🚨 DELHI POLICE CHALLAN JSON (Basic Info):', {
+                                  source: challan.source,
+                                  challanId: challan.challanNumber || challan.challanNo || challan.noticeNo,
+                                  offenceDateTime: challan.offenceDateTime,
+                                  offenceDate: challan.offenceDate,
+                                  dateTime: challan.dateTime,
+                                  date: challan.date,
+                                  challanDate: challan.challanDate,
+                                  noticeDate: challan.noticeDate,
+                                  issueDate: challan.issueDate,
+                                  createdDate: challan.createdDate,
+                                  extractedDate: date,
+                                  fullChallanObject: challan
+                                });
                               } else {
                                 // Other sources (mparivahan, carinfo, acko)
                                 date = challan.dateTime || challan.date || challan.challanDate || challan.noticeDate || challan.issueDate || challan.createdDate || 'Unknown';
@@ -2063,6 +2079,29 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                          </div>
                         
                         <div className="space-y-4">
+                          {/* 🎯 DEBUG: Console log all Delhi Police challans */}
+                          {(() => {
+                            const delhiPoliceChallans = sourceChallans.filter(c => c.source === 'traffic_notice');
+                            if (delhiPoliceChallans.length > 0) {
+                              console.log('🚨 ALL DELHI POLICE CHALLANS (Before Processing):', {
+                                source: 'traffic_notice',
+                                count: delhiPoliceChallans.length,
+                                challans: delhiPoliceChallans.map(c => ({
+                                  challanId: c.challanNumber || c.challanNo || c.noticeNo,
+                                  offenceDateTime: c.offenceDateTime,
+                                  offenceDate: c.offenceDate,
+                                  dateTime: c.dateTime,
+                                  date: c.date,
+                                  challanDate: c.challanDate,
+                                  noticeDate: c.noticeDate,
+                                  issueDate: c.issueDate,
+                                  createdDate: c.createdDate
+                                }))
+                              });
+                            }
+                            return null;
+                          })()}
+                          
                           {sourceChallans.map((challan: any, index: number) => {
                             // Handle different field names for different sources
                             let amount: string | number = 0;
