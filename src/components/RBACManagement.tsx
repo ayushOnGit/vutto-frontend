@@ -54,9 +54,9 @@ const RBACManagement: React.FC = () => {
     try {
       setLoading(true);
       const [usersRes, rolesRes, permissionsRes] = await Promise.all([
-        fetch('/api/auth/users'),
-        fetch('/api/auth/roles'),
-        fetch('/api/auth/permissions')
+        fetch('https://test.fitstok.com/api/auth/users'),
+        fetch('https://test.fitstok.com/api/auth/roles'),
+        fetch('https://test.fitstok.com/api/auth/permissions')
       ]);
 
       if (usersRes.ok) {
@@ -82,7 +82,7 @@ const RBACManagement: React.FC = () => {
 
   const handleRoleUpdate = async (userId: number, roleId: number) => {
     try {
-      const response = await fetch('/api/auth/users/role', {
+      const response = await fetch('https://test.fitstok.com/api/auth/users/role', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, roleId })
@@ -105,7 +105,7 @@ const RBACManagement: React.FC = () => {
 
   const handlePermissionToggle = async (userId: number, permissionId: number, granted: boolean) => {
     try {
-      const endpoint = granted ? '/api/auth/users/permissions/grant' : '/api/auth/users/permissions/revoke';
+      const endpoint = granted ? 'https://test.fitstok.com/api/auth/users/permissions/grant' : 'https://test.fitstok.com/api/auth/users/permissions/revoke';
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
