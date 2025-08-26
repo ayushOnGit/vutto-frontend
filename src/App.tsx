@@ -3,9 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Navigation from './components/Navigation';
+import Login from './components/Login';
 import SettlementConfigDashboard from './components/SettlementConfigDashboard';
 import ChallanDatabaseDashboard from './components/ChallanDatabaseDashboard';
-import Login from './components/Login';
+import RBACManagement from './components/RBACManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -41,6 +42,14 @@ function AppContent() {
             element={
               <ProtectedRoute requiredPermission={{ resource: 'challan_dashboard', action: 'read' }}>
                 <ChallanDatabaseDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/rbac" 
+            element={
+              <ProtectedRoute requiredPermission={{ resource: 'user_management', action: 'read' }}>
+                <RBACManagement />
               </ProtectedRoute>
             } 
           />

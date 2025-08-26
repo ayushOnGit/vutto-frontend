@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Settings, Menu, X, Database, LogOut, User as UserIcon } from 'lucide-react';
+import { Settings, Menu, X, Database, LogOut, User as UserIcon, Shield } from 'lucide-react';
 import { User } from '../contexts/AuthContext';
 
 interface NavigationProps {
@@ -16,19 +16,24 @@ const Navigation: React.FC<NavigationProps> = ({ user, onLogout }) => {
   const navItems = [
     {
       id: 'settlement',
+      label: 'Settlement Config',
       path: '/settlement',
-      label: 'Settlement Configuration',
       icon: Settings,
-      description: 'Manage settlement rules and percentages',
       requiredPermission: { resource: 'settlement_config', action: 'read' }
     },
     {
       id: 'database',
+      label: 'Challan Database',
       path: '/database',
-      label: 'Bike Database & Search',
       icon: Database,
-      description: 'Search new challans and view all bike challans in database',
       requiredPermission: { resource: 'challan_dashboard', action: 'read' }
+    },
+    {
+      id: 'rbac',
+      label: 'RBAC Management',
+      path: '/rbac',
+      icon: Shield,
+      requiredPermission: { resource: 'user_management', action: 'read' }
     }
   ];
 
@@ -148,7 +153,6 @@ const Navigation: React.FC<NavigationProps> = ({ user, onLogout }) => {
                     <Icon size={20} className="mr-3" />
                     <div className="text-left">
                       <div className="font-medium">{item.label}</div>
-                      <div className="text-xs text-gray-500">{item.description}</div>
                     </div>
                   </Link>
                 );
