@@ -23,7 +23,7 @@ const ChallanSearchDashboard: React.FC = () => {
     regNumber: '',
     engineNumber: '',
     chassisNumber: '',
-    mobileNumber: ''
+    mobileNumber: '8287041552'
   });
 
   const [isSearching, setIsSearching] = useState(false);
@@ -155,7 +155,7 @@ const ChallanSearchDashboard: React.FC = () => {
                   value={searchForm.mobileNumber}
                   onChange={(e) => handleInputChange('mobileNumber', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., 9876543210"
+                  placeholder="e.g., 8287041552"
                   disabled={isSearching}
                 />
               </div>

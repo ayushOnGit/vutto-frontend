@@ -335,9 +335,9 @@ const ChallanDatabaseDashboard: React.FC = () => {
   // Bulk upload functions
   const downloadCSVTemplate = () => {
     const csvContent = `regNo,engineNo,chassisNo,stakeholderMobile
-DL1SAD6045,,,9315970244
+DL1SAD6045,,,8287041552
 DL3CBZ4267,123456789,ABCD123456,8287041552
-HR12AB1234,987654321,XYZ789012,9876543210`;
+HR12AB1234,987654321,XYZ789012,8287041552`;
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -762,6 +762,14 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
       // Calculate total ORIGINAL amounts from all active challans (for rule determination)
       const totalOriginalAmount = activeChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
       
+      // 🎯 DEBUG: Log individual challan amounts to see why Case 4 isn't triggered
+      console.log('🔍 HOLD AMOUNT DEBUG - Individual Challan Amounts:');
+      activeChallans.forEach((challan, index) => {
+        const challanAmount = getChallanAmount(challan);
+        console.log(`  Challan ${index + 1}: ${challan.source} - Amount: ₹${challanAmount} (${challanAmount > 2000 ? 'ABOVE ₹2000!' : 'Below ₹2000'})`);
+      });
+      console.log(`  Total Original Amount: ₹${totalOriginalAmount}`);
+      
       // Use settlement amount directly from database instead of calculating
       const totalSettlementAmount = bikeChallan.settlement_summary_json?.totalSettlementAmount || 0;
 
@@ -773,16 +781,21 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
       // Check if any challan exceeds ₹2000 (Case 4 - highest priority)
       const hasChallanOver2000 = activeChallans.some(challan => getChallanAmount(challan) > 2000);
       
+      // 🎯 DEBUG: Log Case 4 check
+      console.log(`🔍 HOLD AMOUNT DEBUG - Case 4 Check: hasChallanOver2000 = ${hasChallanOver2000}`);
+      
       if (hasChallanOver2000) {
         extraCharge = 1500;
         ruleApplied = 'Case 4: Any Challan Above ₹2000';
-        breakdown = `Challan(s) above ₹2000 + ₹1500 service charge`;
+        breakdown = `Challan(s) above ₹2000 (₹${totalOriginalAmount}) + ₹1500 service charge = Hold Amount ₹${totalOriginalAmount + 1500}`;
+        console.log(`🎯 HOLD AMOUNT DEBUG - Case 4 TRIGGERED: Extra Charge = ₹${extraCharge}`);
       }
       // Case 1: Single DL challan < ₹1000
       else if (activeChallans.length === 1 && isDLChallan(activeChallans[0]) && totalOriginalAmount < 1000) {
         extraCharge = 200;
         ruleApplied = 'Case 1: Single DL Challan Under ₹1000';
-        breakdown = `Single DL challan (₹${totalOriginalAmount}) + ₹200 service charge`;
+        breakdown = `Single DL challan (₹${totalOriginalAmount}) + ₹200 service charge = Hold Amount ₹${totalOriginalAmount + 200}`;
+        console.log(`🎯 HOLD AMOUNT DEBUG - Case 1 TRIGGERED: Extra Charge = ₹${extraCharge}`);
       }
       // Case 2: Multiple DL challans (sum > ₹1000 OR any single > ₹1000)
       else if (activeChallans.length > 1 && 
@@ -790,34 +803,46 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                (totalOriginalAmount > 1000 || activeChallans.some(challan => getChallanAmount(challan) > 1000))) {
         extraCharge = 500;
         ruleApplied = 'Case 2: Multiple DL Challans (Sum > ₹1000 OR Any > ₹1000)';
-        breakdown = `Multiple DL challans (₹${totalOriginalAmount}) + ₹500 service charge`;
+        breakdown = `Multiple DL challans (₹${totalOriginalAmount}) + ₹500 service charge = Hold Amount ₹${totalOriginalAmount + 500}`;
+        console.log(`🎯 HOLD AMOUNT DEBUG - Case 2 TRIGGERED: Extra Charge = ₹${extraCharge}`);
       }
       // Case 3: Mixed DL + Non-DL challans (amount ≤ ₹2000)
       else if (activeChallans.some(challan => isDLChallan(challan)) && 
                activeChallans.some(challan => !isDLChallan(challan))) {
         extraCharge = 1000;
         ruleApplied = 'Case 3: Mixed DL + Non-DL Challans (≤ ₹2000)';
-        breakdown = `Mixed challans (₹${totalOriginalAmount}) + ₹1000 service charge`;
+        breakdown = `Mixed challans (₹${totalOriginalAmount}) + ₹1000 service charge = Hold Amount ₹${totalOriginalAmount + 1000}`;
+        console.log(`🎯 HOLD AMOUNT DEBUG - Case 3 TRIGGERED: Extra Charge = ₹${extraCharge}`);
       }
       // Case 5: Single non-DL challan (any amount)
       else if (activeChallans.length === 1 && !isDLChallan(activeChallans[0])) {
         extraCharge = 1000;
         ruleApplied = 'Case 5: Single Non-DL Challan (Any Amount)';
-        breakdown = `Single non-DL challan (₹${totalOriginalAmount}) + ₹1000 service charge`;
+        breakdown = `Single non-DL challan (₹${totalOriginalAmount}) + ₹1000 service charge = Hold Amount ₹${totalOriginalAmount + 1000}`;
+        console.log(`🎯 HOLD AMOUNT DEBUG - Case 5 TRIGGERED: Extra Charge = ₹${extraCharge}`);
       }
       // Default: No extra charge
       else {
         extraCharge = 0;
         ruleApplied = 'No Case: No Extra Charge';
         breakdown = `Total original (₹${totalOriginalAmount}) - no service charge applicable`;
+        console.log(`🎯 HOLD AMOUNT DEBUG - NO CASE TRIGGERED: Extra Charge = ₹${extraCharge}`);
       }
 
-      // Final hold amount = Database settlement amount + Extra charge (calculated from original amounts)
-      const holdAmount = totalSettlementAmount + extraCharge;
+      // Final hold amount = Original amount + Extra charge (NOT settlement amount + extra charge)
+      const holdAmount = totalOriginalAmount + extraCharge;
+      
+      // 🎯 DEBUG: Log final hold amount calculation
+      console.log(`🎯 HOLD AMOUNT DEBUG - FINAL RESULT:`);
+      console.log(`  Rule Applied: ${ruleApplied}`);
+      console.log(`  Original Amount: ₹${totalOriginalAmount}`);
+      console.log(`  Extra Charge: ₹${extraCharge}`);
+      console.log(`  Hold Amount: ₹${holdAmount}`);
+      console.log(`  Breakdown: ${breakdown}`);
 
       return {
         holdAmount,
-        breakdown: `${breakdown} = Hold Amount ₹${holdAmount}`,
+        breakdown: `${breakdown} = Hold Amount ₹${holdAmount} (Original: ₹${totalOriginalAmount} + Service: ₹${extraCharge})`,
         ruleApplied,
         baseAmount: totalSettlementAmount,
         extraCharge,
@@ -1189,7 +1214,7 @@ HR12AB1234,987654321,XYZ789012,9876543210`;
                       <li><code>regNo</code> - Vehicle registration number (e.g., DL1SAD6045)</li>
                       <li><code>engineNo</code> - Engine number (optional, can be empty)</li>
                       <li><code>chassisNo</code> - Chassis number (optional, can be empty)</li>
-                      <li><code>stakeholderMobile</code> - Mobile number (e.g., 9315970244)</li>
+                      <li><code>stakeholderMobile</code> - Mobile number (e.g., 8287041552)</li>
                     </ul>
                     <p className="mt-2 text-xs text-gray-500">
                       The system will process each vehicle sequentially to avoid overwhelming the target websites.
