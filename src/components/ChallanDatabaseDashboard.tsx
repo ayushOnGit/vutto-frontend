@@ -350,6 +350,160 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
     window.URL.revokeObjectURL(url);
   };
 
+  // Download CSV function for dashboard data
+  const downloadCSV = () => {
+    if (bikeChallans.length === 0) {
+      alert('No data to export');
+      return;
+    }
+
+          // Define CSV headers (excluding Actions and Refetch columns)
+      const headers = [
+        'Registration Number',
+        'Engine Number',
+        'Chassis Number',
+        'Challan Count',
+        'Original Amount',
+        'Settlement Amount',
+        'FIR Status',
+        'Challan Date',
+        'Last Updated',
+        'VCourt Notice Status',
+        'VCourt Notice Amount',
+        'VCourt Traffic Status',
+        'VCourt Traffic Amount',
+        'Delhi Police Status',
+        'Delhi Police Amount',
+        'Car Info Status',
+        'Car Info Amount',
+        'Hold Amount'
+      ];
+
+    // Create CSV content
+    const csvRows = [headers.join(',')];
+
+    // Add data rows
+    sortedBikeChallans.forEach((bikeChallan) => {
+      // Calculate amounts for each source
+      const activeVcourtNoticeChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+        c.source === 'vcourt_notice' && isActiveChallan(c)
+      ) || [];
+      const activeVcourtTrafficChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+        c.source === 'vcourt_traffic' && isActiveChallan(c)
+      ) || [];
+      const activeDelhiPoliceChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+        c.source === 'traffic_notice' && isActiveChallan(c)
+      ) || [];
+      const activeCarInfoChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+        c.source === 'acko' && isActiveChallan(c)
+      ) || [];
+
+      // Calculate amounts
+      const vcourtNoticeAmount = activeVcourtNoticeChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+      const vcourtTrafficAmount = activeVcourtTrafficChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+      const delhiPoliceAmount = activeDelhiPoliceChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+      const carInfoAmount = activeCarInfoChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+
+      // Get hold amount
+      const { holdAmount } = calculateHoldAmount(bikeChallan);
+
+      // Format dates
+      const challanDate = (() => {
+        if (!bikeChallan.unique_challans_json || bikeChallan.unique_challans_json.length === 0) return 'No Date';
+        
+        const challanDates = bikeChallan.unique_challans_json?.map((challan: any) => {
+          let date = 'Unknown';
+          
+          if (challan.source === 'vcourt_notice' || challan.source === 'vcourt_traffic') {
+            if (challan.detailedInfo?.caseDetails) {
+              date = challan.detailedInfo.caseDetails['Challan Date.'] ||
+                     challan.detailedInfo.caseDetails['Challan Date'] ||
+                     challan.detailedInfo.caseDetails['Notice Date'] ||
+                     challan.detailedInfo.caseDetails['Issue Date'] ||
+                     challan.detailedInfo.caseDetails['Registration Date'] ||
+                     challan.detailedInfo.caseDetails['Date'] || 'Unknown';
+            }
+            if (date === 'Unknown' && challan.detailedInfo) {
+              date = challan.detailedInfo.challanDate ||
+                     challan.detailedInfo.noticeDate ||
+                     challan.detailedInfo.issueDate ||
+                     challan.detailedInfo.date || 'Unknown';
+            }
+          } else {
+            if (challan.source === 'traffic_notice') {
+              date = challan.offenceDateTime || challan.offenceDate || challan.dateTime || challan.date || challan.challanDate || challan.noticeDate || challan.issueDate || challan.createdDate || 'Unknown';
+            } else {
+              date = challan.dateTime || challan.date || challan.challanDate || challan.noticeDate || challan.issueDate || challan.createdDate || 'Unknown';
+            }
+          }
+          
+          return date;
+        }) || [];
+        
+        const validDates = challanDates.filter(date => date !== 'Unknown' && date !== '');
+        if (validDates.length === 0) return 'No Date';
+        
+        const parsedDates = validDates.map(dateStr => {
+          try {
+            return new Date(dateStr);
+          } catch {
+            return null;
+          }
+        }).filter(date => date && !isNaN(date.getTime()));
+        
+        if (parsedDates.length === 0) return validDates[0] || 'Invalid Date';
+        
+        const earliestDate = new Date(Math.min(...parsedDates.map(d => d!.getTime())));
+        return earliestDate.toLocaleDateString('en-IN');
+      })();
+
+      // Create row data
+      const row = [
+        bikeChallan.reg_no || 'N/A',
+        bikeChallan.engine_no || 'N/A',
+        bikeChallan.chassis_no || 'N/A',
+        bikeChallan.unique_challans_json?.filter((c: any) => isActiveChallan(c)).length || 0,
+        formatAmount(bikeChallan.settlement_summary_json?.totalOriginalAmount || 0),
+        formatAmount(bikeChallan.settlement_summary_json?.totalSettlementAmount || 0),
+        bikeChallan.fir_status || 'N/A',
+        challanDate,
+        formatDate(bikeChallan.updated_at),
+        activeVcourtNoticeChallans.length > 0 ? `✓ ${activeVcourtNoticeChallans.length} challan(s)` : 'Record not found',
+        `₹${vcourtNoticeAmount.toLocaleString()}`,
+        activeVcourtTrafficChallans.length > 0 ? `✓ ${activeVcourtTrafficChallans.length} challan(s)` : 'Record not found',
+        `₹${vcourtTrafficAmount.toLocaleString()}`,
+        activeDelhiPoliceChallans.length > 0 ? `✓ ${activeDelhiPoliceChallans.length} challan(s)` : 'Record not found',
+        `₹${delhiPoliceAmount.toLocaleString()}`,
+        activeCarInfoChallans.length > 0 ? `✓ ${activeCarInfoChallans.length} challan(s)` : 'Record not found',
+        `₹${carInfoAmount.toLocaleString()}`,
+        `₹${holdAmount.toLocaleString()}`
+      ];
+
+      // Escape commas and quotes in CSV
+      const escapedRow = row.map(field => {
+        const fieldStr = String(field);
+        if (fieldStr.includes(',') || fieldStr.includes('"') || fieldStr.includes('\n')) {
+          return `"${fieldStr.replace(/"/g, '""')}"`;
+        }
+        return fieldStr;
+      });
+
+      csvRows.push(escapedRow.join(','));
+    });
+
+    // Create and download CSV file
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bike_challans_dashboard_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
   const handleBulkUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     console.log('📁 File selected:', file);
@@ -966,6 +1120,14 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
               >
                 <Plus size={16} className="mr-2" />
                 Search New Challans
+              </button>
+              <button
+                onClick={downloadCSV}
+                disabled={bikeChallans.length === 0}
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download size={16} className="mr-2" />
+                Download CSV
               </button>
               <button
                 onClick={loadBikeChallans}
@@ -1864,31 +2026,31 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(() => {
                           // Filter to only ACTIVE challans (non-disposed, non-paid)
-                          const activeAckoChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                          const activeCarInfoChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
                             c.source === 'acko' && isActiveChallan(c)
                           ) || [];
                           
-                          if (activeAckoChallans.length === 0) {
+                          if (activeCarInfoChallans.length === 0) {
                             return <span className="text-gray-500">Record not found</span>;
                           }
-                          if (activeAckoChallans.some((c: any) => c.error || c.status === 'error')) {
+                          if (activeCarInfoChallans.some((c: any) => c.error || c.status === 'error')) {
                             return <span className="text-red-600">Error fetching</span>;
                           }
-                          return <span className="text-green-600">✓ {activeAckoChallans.length} challan(s)</span>;
+                          return <span className="text-green-600">✓ {activeCarInfoChallans.length} challan(s)</span>;
                         })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(() => {
                           // Calculate total amount for Car Info challans
-                          const activeAckoChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                          const activeCarInfoChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
                             c.source === 'acko' && isActiveChallan(c)
                           ) || [];
                           
-                          if (activeAckoChallans.length === 0) {
+                          if (activeCarInfoChallans.length === 0) {
                             return <span className="text-gray-500">₹0</span>;
                           }
                           
-                          const totalAmount = activeAckoChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+                          const totalAmount = activeCarInfoChallans.reduce((sum: number, challan: any) => sum + getChallanAmount(challan), 0);
                           return <span className="font-medium text-gray-900">₹{totalAmount.toLocaleString()}</span>;
                         })()}
                       </td>
@@ -2511,8 +2673,10 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                           // Group challans by source
                           activeChallans.forEach(challan => {
                             const source = challan.source || 'unknown';
-                            if (sourceGroups[source]) {
-                              sourceGroups[source].push(challan);
+                            // Map 'acko' source to 'car_info' for display
+                            const displaySource = source === 'acko' ? 'car_info' : source;
+                            if (sourceGroups[displaySource]) {
+                              sourceGroups[displaySource].push(challan);
                             }
                           });
                           
@@ -2532,7 +2696,7 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                             vcourt_notice: sourceGroups.vcourt_notice.length,
                             vcourt_traffic: sourceGroups.vcourt_traffic.length,
                             traffic_notice: sourceGroups.traffic_notice.length,
-                            acko: sourceGroups.acko.length
+                            car_info: sourceGroups.car_info.length
                           });
 
                           // Debug: Log Delhi Police challans specifically
@@ -2742,14 +2906,14 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                               )}
                               
                               {/* Car Info Challans */}
-                              {sourceGroups.acko.length > 0 && (
+                              {sourceGroups.car_info.length > 0 && (
                                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                                   <h5 className="font-semibold text-green-900 mb-3 flex items-center">
                                     <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                                    Car Info Challans ({sourceGroups.acko.length})
+                                    Car Info Challans ({sourceGroups.car_info.length})
                                   </h5>
                                   <div className="space-y-3">
-                                    {sourceGroups.acko.map((challan: any, index: number) => {
+                                    {sourceGroups.car_info.map((challan: any, index: number) => {
                                       const isDL = challan.challan_number?.startsWith('DL') || /^\d/.test(challan.challan_number || '');
                                       const originalAmount = getChallanAmount(challan);
                                       const settlementAmount = getChallanSettlementAmount(challan);
@@ -2784,7 +2948,7 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                                   <div className="mt-3 pt-3 border-t border-green-200">
                                     <div className="flex justify-between text-sm font-medium text-green-900">
                                       <span>Car Info Total:</span>
-                                      <span>₹{sourceGroups.acko.reduce((sum, challan) => sum + getChallanAmount(challan), 0).toLocaleString()}</span>
+                                      <span>₹{sourceGroups.car_info.reduce((sum, challan) => sum + getChallanAmount(challan), 0).toLocaleString()}</span>
                                     </div>
                                   </div>
                                 </div>
