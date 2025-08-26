@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Shield, Key, Edit, Save, X, Plus, Trash2 } from 'lucide-react';
 
+// API Configuration
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://test.fitstok.com';
+
 interface User {
   id: number;
   email: string;
@@ -53,10 +56,16 @@ const RBACManagement: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem('authToken');
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      };
+
       const [usersRes, rolesRes, permissionsRes] = await Promise.all([
-        fetch('https://test.fitstok.com/api/auth/users'),
-        fetch('https://test.fitstok.com/api/auth/roles'),
-        fetch('https://test.fitstok.com/api/auth/permissions')
+        fetch(`${API_BASE_URL}/api/auth/users`, { headers }),
+        fetch(`${API_BASE_URL}/api/auth/roles`, { headers }),
+        fetch(`${API_BASE_URL}/api/auth/permissions`, { headers })
       ]);
 
       if (usersRes.ok) {
@@ -82,9 +91,13 @@ const RBACManagement: React.FC = () => {
 
   const handleRoleUpdate = async (userId: number, roleId: number) => {
     try {
-      const response = await fetch('https://test.fitstok.com/api/auth/users/role', {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/api/auth/users/role`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         body: JSON.stringify({ userId, roleId })
       });
 
@@ -105,10 +118,14 @@ const RBACManagement: React.FC = () => {
 
   const handlePermissionToggle = async (userId: number, permissionId: number, granted: boolean) => {
     try {
-      const endpoint = granted ? 'https://test.fitstok.com/api/auth/users/permissions/grant' : 'https://test.fitstok.com/api/auth/users/permissions/revoke';
+      const token = localStorage.getItem('authToken');
+      const endpoint = granted ? `${API_BASE_URL}/api/auth/users/permissions/grant` : `${API_BASE_URL}/api/auth/users/permissions/revoke`;
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         body: JSON.stringify({ userId, permissionId })
       });
 
