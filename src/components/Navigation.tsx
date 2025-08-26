@@ -43,9 +43,13 @@ const Navigation: React.FC<NavigationProps> = ({ user, onLogout }) => {
     );
   };
 
-  const filteredNavItems = navItems.filter(item => 
-    hasPermission(item.requiredPermission.resource, item.requiredPermission.action)
-  );
+  // Filter navigation items based on user role
+  const filteredNavItems = navItems.filter(item => {
+    if (user.role === 'admin') return true; // Admin sees everything
+    if (user.role === 'manager') return item.id !== 'rbac'; // Manager sees most (no RBAC)
+    if (user.role === 'employee') return item.id === 'database'; // Employee sees only challan database
+    return false;
+  });
 
   const handleLogout = () => {
     onLogout();

@@ -19,6 +19,13 @@ function AppContent() {
     return <Login onLogin={login} />;
   }
 
+  // Determine default route based on user role
+  const getDefaultRoute = () => {
+    if (user.role === 'employee') return '/database'; // Employee goes to challan database
+    if (user.role === 'manager') return '/settlement'; // Manager goes to settlement config
+    return '/settlement'; // Admin goes to settlement config (default)
+  };
+
   // If authenticated, show main app
   return (
     <div className="App">
@@ -27,7 +34,7 @@ function AppContent() {
         <Routes>
           <Route 
             path="/" 
-            element={<Navigate to="/settlement" replace />} 
+            element={<Navigate to={getDefaultRoute()} replace />} 
           />
           <Route 
             path="/settlement" 
@@ -55,7 +62,7 @@ function AppContent() {
           />
           <Route 
             path="*" 
-            element={<Navigate to="/settlement" replace />} 
+            element={<Navigate to={getDefaultRoute()} replace />} 
           />
         </Routes>
       </div>
