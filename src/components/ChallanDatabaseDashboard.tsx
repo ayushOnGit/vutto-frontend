@@ -369,12 +369,12 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
         'Challan Date',
         'Last Updated',
         'VCourt Notice Status',
-        'VCourt Notice Amount',
         'VCourt Traffic Status',
-        'VCourt Traffic Amount',
         'Delhi Police Status',
-        'Delhi Police Amount',
         'Car Info Status',
+        'VCourt Notice Amount',
+        'VCourt Traffic Amount',
+        'Delhi Police Amount',
         'Car Info Amount',
         'Hold Amount'
       ];
@@ -469,12 +469,12 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
         challanDate,
         formatDate(bikeChallan.updated_at),
         activeVcourtNoticeChallans.length > 0 ? `✓ ${activeVcourtNoticeChallans.length} challan(s)` : 'Record not found',
-        `₹${vcourtNoticeAmount.toLocaleString()}`,
         activeVcourtTrafficChallans.length > 0 ? `✓ ${activeVcourtTrafficChallans.length} challan(s)` : 'Record not found',
-        `₹${vcourtTrafficAmount.toLocaleString()}`,
         activeDelhiPoliceChallans.length > 0 ? `✓ ${activeDelhiPoliceChallans.length} challan(s)` : 'Record not found',
-        `₹${delhiPoliceAmount.toLocaleString()}`,
         activeCarInfoChallans.length > 0 ? `✓ ${activeCarInfoChallans.length} challan(s)` : 'Record not found',
+        `₹${vcourtNoticeAmount.toLocaleString()}`,
+        `₹${vcourtTrafficAmount.toLocaleString()}`,
+        `₹${delhiPoliceAmount.toLocaleString()}`,
         `₹${carInfoAmount.toLocaleString()}`,
         `₹${holdAmount.toLocaleString()}`
       ];
@@ -1600,44 +1600,29 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Challan Date
                   </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => {
-                      if (sortField === 'updated_at') {
-                        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                      } else {
-                        setSortField('updated_at');
-                        setSortDirection('desc');
-                      }
-                    }}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Last Updated</span>
-                      {sortField === 'updated_at' && (
-                        <span className="text-blue-600">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Last Updated
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     VCourt Notice Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    VCourt Notice Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     VCourt Traffic Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    VCourt Traffic Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Delhi Police Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Delhi Police Amount
+                    Car Info Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Car Info Status
+                    VCourt Notice Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    VCourt Traffic Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Delhi Police Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Car Info Amount
@@ -1948,21 +1933,6 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(() => {
-                          // Calculate total amount for VCourt Notice challans
-                          const activeVcourtNoticeChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
-                            c.source === 'vcourt_notice' && isActiveChallan(c)
-                          ) || [];
-                          
-                          if (activeVcourtNoticeChallans.length === 0) {
-                            return <span className="text-gray-500">₹0</span>;
-                          }
-                          
-                          const totalAmount = activeVcourtNoticeChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
-                          return <span className="font-medium text-gray-900">₹{totalAmount.toLocaleString()}</span>;
-                        })()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {(() => {
                           // Filter to only ACTIVE challans (non-disposed, non-paid)
                           const activeVcourtTrafficChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
                             c.source === 'vcourt_traffic' && isActiveChallan(c)
@@ -1975,21 +1945,6 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                             return <span className="text-red-600">Error fetching</span>;
                           }
                           return <span className="text-green-600">✓ {activeVcourtTrafficChallans.length} challan(s)</span>;
-                        })()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {(() => {
-                          // Calculate total amount for VCourt Traffic challans
-                          const activeVcourtTrafficChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
-                            c.source === 'vcourt_traffic' && isActiveChallan(c)
-                          ) || [];
-                          
-                          if (activeVcourtTrafficChallans.length === 0) {
-                            return <span className="text-gray-500">₹0</span>;
-                          }
-                          
-                          const totalAmount = activeVcourtTrafficChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
-                          return <span className="font-medium text-gray-900">₹{totalAmount.toLocaleString()}</span>;
                         })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -2010,21 +1965,6 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(() => {
-                          // Calculate total amount for Delhi Police challans
-                          const activeDelhiPoliceChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
-                            c.source === 'traffic_notice' && isActiveChallan(c)
-                          ) || [];
-                          
-                          if (activeDelhiPoliceChallans.length === 0) {
-                            return <span className="text-gray-500">₹0</span>;
-                          }
-                          
-                          const totalAmount = activeDelhiPoliceChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
-                          return <span className="font-medium text-gray-900">₹{totalAmount.toLocaleString()}</span>;
-                        })()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {(() => {
                           // Filter to only ACTIVE challans (non-disposed, non-paid)
                           const activeCarInfoChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
                             c.source === 'acko' && isActiveChallan(c)
@@ -2037,6 +1977,51 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                             return <span className="text-red-600">Error fetching</span>;
                           }
                           return <span className="text-green-600">✓ {activeCarInfoChallans.length} challan(s)</span>;
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          // Calculate total amount for VCourt Notice challans
+                          const activeVcourtNoticeChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                            c.source === 'vcourt_notice' && isActiveChallan(c)
+                          ) || [];
+                          
+                          if (activeVcourtNoticeChallans.length === 0) {
+                            return <span className="text-gray-500">₹0</span>;
+                          }
+                          
+                          const totalAmount = activeVcourtNoticeChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+                          return <span className="font-medium text-gray-900">₹{totalAmount.toLocaleString()}</span>;
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          // Calculate total amount for VCourt Traffic challans
+                          const activeVcourtTrafficChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                            c.source === 'vcourt_traffic' && isActiveChallan(c)
+                          ) || [];
+                          
+                          if (activeVcourtTrafficChallans.length === 0) {
+                            return <span className="text-gray-500">₹0</span>;
+                          }
+                          
+                          const totalAmount = activeVcourtTrafficChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+                          return <span className="font-medium text-gray-900">₹{totalAmount.toLocaleString()}</span>;
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          // Calculate total amount for Delhi Police challans
+                          const activeDelhiPoliceChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                            c.source === 'traffic_notice' && isActiveChallan(c)
+                          ) || [];
+                          
+                          if (activeDelhiPoliceChallans.length === 0) {
+                            return <span className="text-gray-500">₹0</span>;
+                          }
+                          
+                          const totalAmount = activeDelhiPoliceChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+                          return <span className="font-medium text-gray-900">₹{totalAmount.toLocaleString()}</span>;
                         })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
