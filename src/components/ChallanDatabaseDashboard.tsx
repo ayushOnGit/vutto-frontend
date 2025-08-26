@@ -1460,13 +1460,25 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                     VCourt Notice Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    VCourt Notice Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     VCourt Traffic Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    VCourt Traffic Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Delhi Police Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ACKO Status
+                    Delhi Police Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Car Info Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Car Info Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Hold Amount
@@ -1774,6 +1786,21 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(() => {
+                          // Calculate total amount for VCourt Notice challans
+                          const activeVcourtNoticeChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                            c.source === 'vcourt_notice' && isActiveChallan(c)
+                          ) || [];
+                          
+                          if (activeVcourtNoticeChallans.length === 0) {
+                            return <span className="text-gray-500">₹0</span>;
+                          }
+                          
+                          const totalAmount = activeVcourtNoticeChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+                          return <span className="font-medium text-gray-900">₹{totalAmount.toLocaleString()}</span>;
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
                           // Filter to only ACTIVE challans (non-disposed, non-paid)
                           const activeVcourtTrafficChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
                             c.source === 'vcourt_traffic' && isActiveChallan(c)
@@ -1786,6 +1813,21 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                             return <span className="text-red-600">Error fetching</span>;
                           }
                           return <span className="text-green-600">✓ {activeVcourtTrafficChallans.length} challan(s)</span>;
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          // Calculate total amount for VCourt Traffic challans
+                          const activeVcourtTrafficChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                            c.source === 'vcourt_traffic' && isActiveChallan(c)
+                          ) || [];
+                          
+                          if (activeVcourtTrafficChallans.length === 0) {
+                            return <span className="text-gray-500">₹0</span>;
+                          }
+                          
+                          const totalAmount = activeVcourtTrafficChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+                          return <span className="font-medium text-gray-900">₹{totalAmount.toLocaleString()}</span>;
                         })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -1806,6 +1848,21 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(() => {
+                          // Calculate total amount for Delhi Police challans
+                          const activeDelhiPoliceChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                            c.source === 'traffic_notice' && isActiveChallan(c)
+                          ) || [];
+                          
+                          if (activeDelhiPoliceChallans.length === 0) {
+                            return <span className="text-gray-500">₹0</span>;
+                          }
+                          
+                          const totalAmount = activeDelhiPoliceChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+                          return <span className="font-medium text-gray-900">₹{totalAmount.toLocaleString()}</span>;
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
                           // Filter to only ACTIVE challans (non-disposed, non-paid)
                           const activeAckoChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
                             c.source === 'acko' && isActiveChallan(c)
@@ -1818,6 +1875,21 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                             return <span className="text-red-600">Error fetching</span>;
                           }
                           return <span className="text-green-600">✓ {activeAckoChallans.length} challan(s)</span>;
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          // Calculate total amount for Car Info challans
+                          const activeAckoChallans = bikeChallan.unique_challans_json?.filter((c: any) => 
+                            c.source === 'acko' && isActiveChallan(c)
+                          ) || [];
+                          
+                          if (activeAckoChallans.length === 0) {
+                            return <span className="text-gray-500">₹0</span>;
+                          }
+                          
+                          const totalAmount = activeAckoChallans.reduce((sum, challan) => sum + getChallanAmount(challan), 0);
+                          return <span className="font-medium text-gray-900">₹{totalAmount.toLocaleString()}</span>;
                         })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -2433,7 +2505,7 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                             vcourt_notice: [],
                             vcourt_traffic: [],
                             traffic_notice: [],
-                            acko: []
+                            car_info: []
                           };
                           
                           // Group challans by source
@@ -2669,12 +2741,12 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                                 </div>
                               )}
                               
-                              {/* ACKO/CarInfo Challans */}
+                              {/* Car Info Challans */}
                               {sourceGroups.acko.length > 0 && (
                                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                                   <h5 className="font-semibold text-green-900 mb-3 flex items-center">
                                     <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                                    ACKO/CarInfo Challans ({sourceGroups.acko.length})
+                                    Car Info Challans ({sourceGroups.acko.length})
                                   </h5>
                                   <div className="space-y-3">
                                     {sourceGroups.acko.map((challan: any, index: number) => {
@@ -2685,7 +2757,7 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                                       return (
                                         <div key={index} className="bg-white p-3 rounded border border-green-100">
                                           <div className="flex items-center justify-between mb-2">
-                                            <span className="font-medium text-gray-700">ACKO/CarInfo Challan</span>
+                                            <span className="font-medium text-gray-700">Car Info Challan</span>
                                             <span className={`text-xs px-2 py-1 rounded-full ${
                                               isDL ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
                                             }`}>
@@ -2711,7 +2783,7 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                                   </div>
                                   <div className="mt-3 pt-3 border-t border-green-200">
                                     <div className="flex justify-between text-sm font-medium text-green-900">
-                                      <span>ACKO/CarInfo Total:</span>
+                                      <span>Car Info Total:</span>
                                       <span>₹{sourceGroups.acko.reduce((sum, challan) => sum + getChallanAmount(challan), 0).toLocaleString()}</span>
                                     </div>
                                   </div>
