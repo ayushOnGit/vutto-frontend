@@ -75,7 +75,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </svg>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-            Vutto Company Login
+            Vutto Challan Login
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
             Sign in with your @vutto.in Google account
