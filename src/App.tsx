@@ -1,21 +1,66 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Navigation from './components/Navigation';
 import SettlementConfigDashboard from './components/SettlementConfigDashboard';
 import ChallanDatabaseDashboard from './components/ChallanDatabaseDashboard';
+import Login from './components/Login';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
-function App() {
-  const [currentView, setCurrentView] = useState<'settlement' | 'database'>('settlement');
+// Main App component with authentication
+function AppContent() {
+  const { isAuthenticated, user, login, logout } = useAuth();
 
+  // If not authenticated, show login
+  if (!isAuthenticated || !user) {
+    return <Login onLogin={login} />;
+  }
+
+  // If authenticated, show main app
   return (
     <div className="App">
-      <Navigation currentView={currentView} onViewChange={setCurrentView} />
-      {currentView === 'settlement' ? (
-        <SettlementConfigDashboard />
-      ) : (
-        <ChallanDatabaseDashboard />
-      )}
+      <Navigation user={user} onLogout={logout} />
+      <div className="container mx-auto px-4 py-8">
+        <Routes>
+          <Route 
+            path="/" 
+            element={<Navigate to="/settlement" replace />} 
+          />
+          <Route 
+            path="/settlement" 
+            element={
+              <ProtectedRoute requiredPermission={{ resource: 'settlement_config', action: 'read' }}>
+                <SettlementConfigDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/database" 
+            element={
+              <ProtectedRoute requiredPermission={{ resource: 'challan_dashboard', action: 'read' }}>
+                <ChallanDatabaseDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="*" 
+            element={<Navigate to="/settlement" replace />} 
+          />
+        </Routes>
+      </div>
     </div>
+  );
+}
+
+// Root App component with providers
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
   );
 }
 

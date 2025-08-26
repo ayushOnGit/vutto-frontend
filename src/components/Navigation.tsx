@@ -1,28 +1,51 @@
 import React, { useState } from 'react';
-import { Settings, Menu, X, Database } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Settings, Menu, X, Database, LogOut, User as UserIcon } from 'lucide-react';
+import { User } from '../contexts/AuthContext';
 
 interface NavigationProps {
-  currentView: 'settlement' | 'database';
-  onViewChange: (view: 'settlement' | 'database') => void;
+  user: User;
+  onLogout: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange }) => {
+const Navigation: React.FC<NavigationProps> = ({ user, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     {
       id: 'settlement',
+      path: '/settlement',
       label: 'Settlement Configuration',
       icon: Settings,
-      description: 'Manage settlement rules and percentages'
+      description: 'Manage settlement rules and percentages',
+      requiredPermission: { resource: 'settlement_config', action: 'read' }
     },
     {
       id: 'database',
+      path: '/database',
       label: 'Bike Database & Search',
       icon: Database,
-      description: 'Search new challans and view all bike challans in database'
+      description: 'Search new challans and view all bike challans in database',
+      requiredPermission: { resource: 'challan_dashboard', action: 'read' }
     }
   ];
+
+  const hasPermission = (resource: string, action: string): boolean => {
+    return user.permissions.some((permission: any) => 
+      permission.resource === resource && permission.action === action
+    );
+  };
+
+  const filteredNavItems = navItems.filter(item => 
+    hasPermission(item.requiredPermission.resource, item.requiredPermission.action)
+  );
+
+  const handleLogout = () => {
+    onLogout();
+    navigate('/');
+  };
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -32,37 +55,51 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange }) =>
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">C</span>
+                <span className="text-white font-bold text-sm">V</span>
               </div>
             </div>
             <div className="ml-3">
-              <h1 className="text-xl font-semibold text-gray-900">Challan Manager</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Vutto Challan Manager</h1>
             </div>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="flex space-x-8">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentView === item.id;
-                
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => onViewChange(item.id as 'settlement' | 'database')}
-                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon size={20} className="mr-2" />
-                    {item.label}
-                  </button>
-                );
-              })}
+          <div className="hidden md:flex items-center space-x-8">
+            {filteredNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              
+              return (
+                <Link
+                  key={item.id}
+                  to={item.path}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon size={20} className="mr-2" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* User Info and Logout */}
+          <div className="hidden md:flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-sm text-gray-700">
+              <UserIcon size={16} />
+              <span className="font-medium">{user.name}</span>
+              <span className="text-gray-500">({user.role})</span>
             </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+            >
+              <LogOut size={16} className="mr-2" />
+              Logout
+            </button>
           </div>
 
           {/* Mobile menu button */}
@@ -80,17 +117,28 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange }) =>
         {isMobileMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-gray-50 rounded-lg mt-2">
-              {navItems.map((item) => {
+              {/* User Info */}
+              <div className="px-3 py-2 border-b border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <UserIcon size={16} className="text-gray-500" />
+                  <div>
+                    <div className="font-medium text-gray-900">{user.name}</div>
+                    <div className="text-sm text-gray-500">{user.email}</div>
+                    <div className="text-xs text-gray-400">Role: {user.role}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Items */}
+              {filteredNavItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = currentView === item.id;
+                const isActive = location.pathname === item.path;
                 
                 return (
-                  <button
+                  <Link
                     key={item.id}
-                                          onClick={() => {
-                        onViewChange(item.id as 'settlement' | 'database');
-                        setIsMobileMenuOpen(false);
-                      }}
+                    to={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive
                         ? 'bg-blue-100 text-blue-700'
@@ -102,9 +150,21 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange }) =>
                       <div className="font-medium">{item.label}</div>
                       <div className="text-xs text-gray-500">{item.description}</div>
                     </div>
-                  </button>
+                  </Link>
                 );
               })}
+
+              {/* Logout Button */}
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+              >
+                <LogOut size={20} className="mr-3" />
+                Logout
+              </button>
             </div>
           </div>
         )}
