@@ -65,7 +65,7 @@ const RBACManagement: React.FC = () => {
       const [usersRes, rolesRes, permissionsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/auth/users`, { headers }),
         fetch(`${API_BASE_URL}/api/auth/roles`, { headers }),
-        fetch(`${API_BASE_URL}/api/auth/permissions`, { headers })
+        fetch(`${API_BASE_URL}/api/auth/permissions`, { headers })  
       ]);
 
       if (usersRes.ok) {
