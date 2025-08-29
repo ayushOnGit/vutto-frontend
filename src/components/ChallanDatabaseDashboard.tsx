@@ -21,7 +21,6 @@ interface VehicleSearchForm {
   regNumber: string;
   engineNumber: string;
   chassisNumber: string;
-  mobileNumber: string;
 }
 
 const ChallanDatabaseDashboard: React.FC = () => {
@@ -42,8 +41,7 @@ const ChallanDatabaseDashboard: React.FC = () => {
   const [searchForm, setSearchForm] = useState<VehicleSearchForm>({
     regNumber: '',
     engineNumber: '',
-    chassisNumber: '',
-    mobileNumber: ''
+    chassisNumber: ''
   });
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -88,6 +86,15 @@ const ChallanDatabaseDashboard: React.FC = () => {
         // Log the first item structure if available
         if (data.length > 0) {
           console.log('🔍 First challan item structure:', JSON.stringify(data[0], null, 2));
+          console.log('🚗 Vehicle Details:', {
+            reg_no: data[0].reg_no,
+            engine_no: data[0].engine_no,
+            chassis_no: data[0].chassis_no,
+            engineNumber: (data[0] as any).engineNumber,
+            chassisNumber: (data[0] as any).chassisNumber,
+            engineNo: (data[0] as any).engineNo,
+            chassisNo: (data[0] as any).chassisNo
+          });
           console.log('💰 Settlement Summary JSON:', JSON.stringify(data[0].settlement_summary_json, null, 2));
           console.log('📊 Settlement Summary Fields:', {
             totalOriginalAmount: data[0].settlement_summary_json?.totalOriginalAmount,
@@ -102,6 +109,15 @@ const ChallanDatabaseDashboard: React.FC = () => {
           console.log('✅ Response has data property with', data.data.length, 'items');
           if (data.data.length > 0) {
             console.log('🔍 First challan item structure:', JSON.stringify(data.data[0], null, 2));
+            console.log('🚗 Vehicle Details:', {
+              reg_no: data.data[0].reg_no,
+              engine_no: data.data[0].engine_no,
+              chassis_no: data.data[0].chassis_no,
+              engineNumber: (data.data[0] as any).engineNumber,
+              chassisNumber: (data.data[0] as any).chassisNumber,
+              engineNo: (data.data[0] as any).engineNo,
+              chassisNo: (data.data[0] as any).chassisNo
+            });
             console.log('💰 Settlement Summary JSON:', JSON.stringify(data.data[0].settlement_summary_json, null, 2));
             console.log('📊 Settlement Summary Fields:', {
               totalOriginalAmount: data.data[0].settlement_summary_json?.totalOriginalAmount,
@@ -167,10 +183,7 @@ const ChallanDatabaseDashboard: React.FC = () => {
       setSearchError('Vehicle registration number is required');
       return false;
     }
-    if (!searchForm.mobileNumber.trim()) {
-      setSearchError('Mobile number is required');
-      return false;
-    }
+
     return true;
   };
 
@@ -207,8 +220,7 @@ const ChallanDatabaseDashboard: React.FC = () => {
       setSearchForm({
         regNumber: '',
         engineNumber: '',
-        chassisNumber: '',
-        mobileNumber: ''
+        chassisNumber: ''
       });
       
       // Hide search form after success
@@ -246,8 +258,7 @@ const ChallanDatabaseDashboard: React.FC = () => {
         body: JSON.stringify({
           regNumber: bikeChallan.reg_no,
           engineNumber: bikeChallan.engine_no || '',
-          chassisNumber: bikeChallan.chassis_no || '',
-          mobileNumber: '8287041552' // Default mobile number for refetch
+          chassisNumber: bikeChallan.chassis_no || ''
         }),
       });
 
@@ -334,10 +345,10 @@ const ChallanDatabaseDashboard: React.FC = () => {
 
   // Bulk upload functions
   const downloadCSVTemplate = () => {
-    const csvContent = `regNo,engineNo,chassisNo,stakeholderMobile
-DL1SAD6045,,,8287041552
-DL3CBZ4267,123456789,ABCD123456,8287041552
-HR12AB1234,987654321,XYZ789012,8287041552`;
+    const csvContent = `regNo,engineNo,chassisNo
+DL1SAD6045,,
+DL3CBZ4267,123456789,ABCD123456
+HR12AB1234,987654321,XYZ789012`;
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -547,8 +558,7 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
           return {
             regNo: values[0]?.trim() || '',
             engineNo: values[1]?.trim() || '',
-            chassisNo: values[2]?.trim() || '',
-            stakeholderMobile: values[3]?.trim() || '8287041552'
+            chassisNo: values[2]?.trim() || ''
           };
         }).filter(vehicle => vehicle.regNo); // Filter out empty rows
         
@@ -585,8 +595,7 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
             body: JSON.stringify({
               regNumber: vehicle.regNo,
               engineNumber: vehicle.engineNo,
-              chassisNumber: vehicle.chassisNo,
-              mobileNumber: vehicle.stakeholderMobile
+              chassisNumber: vehicle.chassisNo
             }),
           });
           
@@ -1174,20 +1183,7 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                   />
                 </div>
 
-                {/* Mobile Number */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mobile Number *
-                  </label>
-                  <input
-                    type="tel"
-                    value={searchForm.mobileNumber}
-                    onChange={(e) => handleSearchInputChange('mobileNumber', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="e.g., 8287041552"
-                    required
-                  />
-                </div>
+
 
                 {/* Engine Number */}
                 <div>
@@ -1376,7 +1372,7 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                       <li><code>regNo</code> - Vehicle registration number (e.g., DL1SAD6045)</li>
                       <li><code>engineNo</code> - Engine number (optional, can be empty)</li>
                       <li><code>chassisNo</code> - Chassis number (optional, can be empty)</li>
-                      <li><code>stakeholderMobile</code> - Mobile number (e.g., 8287041552)</li>
+      
                     </ul>
                     <p className="mt-2 text-xs text-gray-500">
                       The system will process each vehicle sequentially to avoid overwhelming the target websites.
@@ -1651,12 +1647,26 @@ HR12AB1234,987654321,XYZ789012,8287041552`;
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {bikeChallan.engine_no || 'N/A'}
+                          {(() => {
+                            // Try multiple possible field names for engine number
+                            const engineNo = bikeChallan.engine_no || 
+                                           (bikeChallan as any).engineNumber || 
+                                           (bikeChallan as any).engineNo ||
+                                           (bikeChallan as any).engine_number;
+                            return engineNo || 'N/A';
+                          })()}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {bikeChallan.chassis_no || 'N/A'}
+                          {(() => {
+                            // Try multiple possible field names for chassis number
+                            const chassisNo = bikeChallan.chassis_no || 
+                                            (bikeChallan as any).chassisNumber || 
+                                            (bikeChallan as any).chassisNo ||
+                                            (bikeChallan as any).chassis_number;
+                            return chassisNo || 'N/A';
+                          })()}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

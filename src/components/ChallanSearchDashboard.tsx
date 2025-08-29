@@ -5,7 +5,6 @@ interface VehicleSearchForm {
   regNumber: string;
   engineNumber: string;
   chassisNumber: string;
-  mobileNumber: string;
 }
 
 interface ChallanResult {
@@ -22,8 +21,7 @@ const ChallanSearchDashboard: React.FC = () => {
   const [searchForm, setSearchForm] = useState<VehicleSearchForm>({
     regNumber: '',
     engineNumber: '',
-    chassisNumber: '',
-    mobileNumber: '8287041552'
+    chassisNumber: ''
   });
 
   const [isSearching, setIsSearching] = useState(false);
@@ -39,10 +37,6 @@ const ChallanSearchDashboard: React.FC = () => {
   const validateForm = (): boolean => {
     if (!searchForm.regNumber.trim()) {
       setError('Vehicle registration number is required');
-      return false;
-    }
-    if (!searchForm.mobileNumber.trim()) {
-      setError('Mobile number is required');
       return false;
     }
     return true;
@@ -145,20 +139,7 @@ const ChallanSearchDashboard: React.FC = () => {
                 />
               </div>
 
-              {/* Mobile Number */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mobile Number *
-                </label>
-                <input
-                  type="tel"
-                  value={searchForm.mobileNumber}
-                  onChange={(e) => handleInputChange('mobileNumber', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., 8287041552"
-                  disabled={isSearching}
-                />
-              </div>
+
 
               {/* Engine Number */}
               <div>
