@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SettlementConfig, SettlementConfigFormData } from '../types/SettlementConfig';
 import SettlementConfigForm from './SettlementConfigForm';
 import SettlementConfigTable from './SettlementConfigTable';
-import { Plus, Settings, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
+import { Plus, Settings, RefreshCw, AlertCircle } from 'lucide-react';
 import { settlementConfigAPI } from '../services/api';
 
 const SettlementConfigDashboard: React.FC = () => {
@@ -151,16 +151,6 @@ const SettlementConfigDashboard: React.FC = () => {
               >
                 <Plus size={16} className="mr-2" />
                 Create New Rule
-              </button>
-              
-              <button
-                onClick={handleClearAll}
-                disabled={isLoading || configs.length === 0}
-                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Clear all settlement rules and start fresh"
-              >
-                <Trash2 size={16} className="mr-2" />
-                Clear All Rules
               </button>
             </div>
           </div>

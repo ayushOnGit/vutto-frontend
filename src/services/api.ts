@@ -74,11 +74,7 @@ export const settlementConfigAPI = {
     return response.data as SettlementConfig;
   },
 
-  // Clear all settlement configurations
-  clearAll: async (): Promise<{ message: string; deletedCount: number }> => {
-    const response = await api.delete('/api/settlement-configs/clear-all');
-    return response.data as { message: string; deletedCount: number };
-  },
+
 };
 
 export default api;
