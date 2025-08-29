@@ -1271,7 +1271,7 @@ HR12AB1234,987654321,XYZ789012`;
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                   <Upload className="text-purple-600" size={24} />
-                  Bulk Upload Vehicles
+                  Bulk Upload Vehicles (CSV/Excel)
                 </h2>
                 <button
                   onClick={() => setShowBulkUpload(false)}
@@ -1284,9 +1284,9 @@ HR12AB1234,987654321,XYZ789012`;
               <div className="p-6 space-y-4">
                 {/* CSV Template Download */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-blue-900 mb-2">CSV Template</h3>
+                  <h3 className="text-sm font-medium text-blue-900 mb-2">CSV/Excel Template</h3>
                   <p className="text-sm text-blue-700 mb-3">
-                    Download the CSV template with the correct column structure for bulk upload.
+                    Download the CSV template with the correct column structure for bulk upload. Excel files should follow the same column structure.
                   </p>
                   <button
                     onClick={downloadCSVTemplate}
@@ -1300,26 +1300,26 @@ HR12AB1234,987654321,XYZ789012`;
                 {/* File Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Upload CSV File
+                    Upload CSV/Excel File
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-                    <input
-                      type="file"
-                      accept=".csv"
-                      onChange={handleBulkUpload}
-                      className="hidden"
-                      id="csv-upload"
-                    />
-                    <label htmlFor="csv-upload" className="cursor-pointer">
-                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                      <p className="mt-2 text-sm text-gray-600">
-                        <span className="font-medium text-purple-600 hover:text-purple-500">
-                          Click to upload
-                        </span>{' '}
-                        or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">CSV files only</p>
-                    </label>
+                                      <input
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={handleBulkUpload}
+                    className="hidden"
+                    id="csv-upload"
+                  />
+                  <label htmlFor="csv-upload" className="cursor-pointer">
+                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                    <p className="mt-2 text-sm text-gray-600">
+                      <span className="font-medium text-purple-600 hover:text-purple-500">
+                        Click to upload
+                      </span>{' '}
+                      or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">CSV, Excel (.xlsx, .xls) files supported</p>
+                  </label>
                   </div>
                 </div>
 
@@ -1375,7 +1375,7 @@ HR12AB1234,987654321,XYZ789012`;
       
                     </ul>
                     <p className="mt-2 text-xs text-gray-500">
-                      The system will process each vehicle sequentially to avoid overwhelming the target websites.
+                      The system will process each vehicle sequentially to avoid overwhelming the target websites. Both CSV and Excel files are supported.
                     </p>
                   </div>
                 </div>
