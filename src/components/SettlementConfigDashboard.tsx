@@ -113,21 +113,7 @@ const SettlementConfigDashboard: React.FC = () => {
     }
   };
 
-  const handleClearAll = async () => {
-    if (!window.confirm('⚠️ WARNING: This will delete ALL settlement rules from the database!\n\nThis action cannot be undone. Are you sure you want to continue?')) {
-      return;
-    }
 
-    try {
-      setError(null);
-      const result = await settlementConfigAPI.clearAll();
-      setSuccessMessage(`Successfully cleared ${result.deletedCount} settlement rules! You can now start configuring from scratch.`);
-      await loadConfigs();
-    } catch (err) {
-      setError('Failed to clear all settlement configurations. Please try again.');
-      console.error('Error clearing all configs:', err);
-    }
-  };
 
   const handleFormCancel = () => {
     setIsFormOpen(false);
