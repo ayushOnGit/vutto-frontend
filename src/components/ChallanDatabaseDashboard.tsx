@@ -203,7 +203,10 @@ const ChallanDatabaseDashboard: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(searchForm),
+        body: JSON.stringify({
+          ...searchForm,
+          stakeholderMobile: '8287041552' // Add default phone number
+        }),
       });
 
       if (!response.ok) {
@@ -258,7 +261,8 @@ const ChallanDatabaseDashboard: React.FC = () => {
         body: JSON.stringify({
           regNumber: bikeChallan.reg_no,
           engineNumber: bikeChallan.engine_no || '',
-          chassisNumber: bikeChallan.chassis_no || ''
+          chassisNumber: bikeChallan.chassis_no || '',
+          stakeholderMobile: '8287041552' // Add default phone number
         }),
       });
 
@@ -541,7 +545,7 @@ HR12AB1234,987654321,XYZ789012`;
         console.log('🏷️ Headers found:', headers);
       
         // Validate headers
-        const requiredHeaders = ['regNo', 'engineNo', 'chassisNo', 'stakeholderMobile'];
+        const requiredHeaders = ['regNo', 'engineNo', 'chassisNo'];
         const hasValidHeaders = requiredHeaders.every(header => 
           headers.includes(header.trim())
         );
@@ -558,7 +562,8 @@ HR12AB1234,987654321,XYZ789012`;
           return {
             regNo: values[0]?.trim() || '',
             engineNo: values[1]?.trim() || '',
-            chassisNo: values[2]?.trim() || ''
+            chassisNo: values[2]?.trim() || '',
+            stakeholderMobile: '8287041552' // Always use default phone number
           };
         }).filter(vehicle => vehicle.regNo); // Filter out empty rows
         
@@ -595,7 +600,8 @@ HR12AB1234,987654321,XYZ789012`;
             body: JSON.stringify({
               regNumber: vehicle.regNo,
               engineNumber: vehicle.engineNo,
-              chassisNumber: vehicle.chassisNo
+              chassisNumber: vehicle.chassisNo,
+              stakeholderMobile: vehicle.stakeholderMobile
             }),
           });
           
@@ -1286,7 +1292,7 @@ HR12AB1234,987654321,XYZ789012`;
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-blue-900 mb-2">CSV/Excel Template</h3>
                   <p className="text-sm text-blue-700 mb-3">
-                    Download the CSV template with the correct column structure for bulk upload. Excel files should follow the same column structure.
+                    Download the CSV template with the correct column structure for bulk upload. Only 3 columns are required: regNo, engineNo, chassisNo. Phone number will be automatically added.
                   </p>
                   <button
                     onClick={downloadCSVTemplate}
@@ -1300,7 +1306,7 @@ HR12AB1234,987654321,XYZ789012`;
                 {/* File Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Upload CSV/Excel File
+                    Upload CSV/Excel File (3 columns: regNo, engineNo, chassisNo)
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
                                       <input
@@ -1375,7 +1381,7 @@ HR12AB1234,987654321,XYZ789012`;
       
                     </ul>
                     <p className="mt-2 text-xs text-gray-500">
-                      The system will process each vehicle sequentially to avoid overwhelming the target websites. Both CSV and Excel files are supported.
+                      The system will process each vehicle sequentially to avoid overwhelming the target websites. Both CSV and Excel files are supported. CSV should have only 3 columns: regNo, engineNo, chassisNo.
                     </p>
                   </div>
                 </div>

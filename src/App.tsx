@@ -27,7 +27,7 @@ function AppContent() {
         <Routes>
           <Route 
             path="/" 
-            element={<Navigate to="/settlement" replace />} 
+            element={<Navigate to={user.role === 'employee' ? '/database' : '/settlement'} replace />} 
           />
           <Route 
             path="/settlement" 
@@ -55,7 +55,7 @@ function AppContent() {
           />
           <Route 
             path="*" 
-            element={<Navigate to="/settlement" replace />} 
+            element={<Navigate to={user.role === 'employee' ? '/database' : '/settlement'} replace />} 
           />
         </Routes>
       </div>

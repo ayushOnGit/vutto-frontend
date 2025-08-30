@@ -44,9 +44,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         console.log('🔄 Calling onLogin function...');
         onLogin(data.data.user);
         
-        console.log('🧭 Navigating to /settlement...');
-        // Navigate to settlement dashboard (matches App.tsx routes)
-        navigate('/settlement');
+        // Check user role and redirect accordingly
+        if (data.data.user.role === 'employee') {
+          console.log('👷 Employee detected, navigating to /database...');
+          navigate('/database');
+        } else {
+          console.log('🧭 Admin/Manager detected, navigating to /settlement...');
+          navigate('/settlement');
+        }
         console.log('✅ Navigation completed');
       } else {
         console.log('❌ Login failed:', data.message);

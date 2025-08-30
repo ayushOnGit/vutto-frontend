@@ -56,7 +56,10 @@ const ChallanSearchDashboard: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(searchForm),
+        body: JSON.stringify({
+          ...searchForm,
+          stakeholderMobile: '8287041552' // Add default phone number
+        }),
       });
 
       if (!response.ok) {
